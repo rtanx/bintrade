@@ -1,0 +1,34 @@
+# Build
+build/
+cmake-build-*/
+
+# vcpkg
+vcpkg_installed/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+CMakeUserPresets.json
+
+# Compiled
+*.a
+*.so
+*.dylib
+*.dll
+*.o
+*.obj
+*.exe
+
+# Test artifacts
+Testing/

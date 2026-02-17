@@ -1,0 +1,164 @@
+---
+# .clang-format — Aligned with C++ Core Guidelines
+# Reference: https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
+
+Language: Cpp
+Standard: c++20
+
+# --- Base Style ---
+# Start from LLVM, then override to match CppCoreGuidelines / Stroustrup style
+BasedOnStyle: LLVM
+
+# --- Indentation (NL.4, NL.17) ---
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+AccessModifierOffset: -4
+IndentCaseLabels: false
+IndentPPDirectives: AfterHash
+IndentExternBlock: Indent
+IndentRequiresClause: true
+LambdaBodyIndentation: Signature
+RequiresClausePosition: OwnLine
+
+# --- Column & Line Length ---
+ColumnLimit: 100
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# --- Braces — Stroustrup / K&R-derived (NL.17) ---
+# "Attach" is close to Stroustrup for most constructs.
+# The Stroustrup style attaches braces to control statements but breaks before
+# functions. "Custom" lets us fine-tune this.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterExternBlock: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# --- Namespaces (SF.7, NL.17) ---
+CompactNamespaces: false
+NamespaceIndentation: None
+FixNamespaceComments: true
+ShortNamespaceLines: 0
+
+# --- Pointer & Reference Alignment (NL.18) ---
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# --- Includes (SF.5, SF.12) ---
+SortIncludes: CaseSensitive
+SortUsingDeclarations: Lexicographic
+IncludeBlocks: Regroup
+IncludeCategories:
+  # 1. Main header (for .cpp files, the corresponding .hpp)
+  - Regex: '^".*\.h(pp)?"'
+    Priority: 1
+  # 2. Project headers
+  - Regex: '^<bintrade/.*>'
+    Priority: 2
+  # 3. Third-party library headers
+  - Regex: '^<(yaml-cpp|nlohmann|cpr|spdlog|fmt|gtest|gmock)/.*>'
+    Priority: 3
+  # 4. System / Standard library headers
+  - Regex: '^<.*>'
+    Priority: 4
+
+# --- Single-Line Rules (NL.4) ---
+# CppCoreGuidelines NL.4: don't place more than one statement on a line
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+
+# --- Breaking Rules ---
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeTernaryOperators: true
+BreakBeforeBinaryOperators: None
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+BreakStringLiterals: true
+PackConstructorInitializers: NextLine
+
+# --- Alignment ---
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: None
+AlignConsecutiveAssignments: None
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: None
+AlignEscapedNewlines: Right
+AlignOperands: Align
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
+# --- Bin Packing ---
+BinPackArguments: true
+BinPackParameters: true
+
+# --- Spaces (NL.15: use spaces sparingly) ---
+Cpp11BracedListStyle: true
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceAroundPointerQualifiers: Default
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles: Never
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# --- Modern C++ ---
+InsertBraces: true
+InsertNewlineAtEOF: true
+RemoveSemicolon: true
+SeparateDefinitionBlocks: Leave
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
+
+# --- Miscellaneous ---
+ReflowComments: true
+QualifierAlignment: Left
+IntegerLiteralSeparator:
+  Binary: 4
+  Decimal: 3
+  Hex: 2
+...

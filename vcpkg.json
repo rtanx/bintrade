@@ -1,0 +1,16 @@
+{
+  "name": "bintrade",
+  "version": "0.1.0",
+  "description": "Binance Trading API Wrapper Library",
+  "license": "MIT",
+  "dependencies": [
+    "boost-beast",
+    "boost-asio",
+    "boost-system",
+    "nlohmann-json",
+    "openssl",
+    "spdlog",
+    "fmt",
+    "gtest"
+  ]
+}

@@ -1,0 +1,197 @@
+---
+# .clang-tidy — Aligned with C++ Core Guidelines
+# Reference: https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
+#
+# Enabled check families:
+#   cppcoreguidelines-*  — Direct Core Guidelines enforcement
+#   bugprone-*           — Bug-prone patterns (P.1, E.6)
+#   clang-analyzer-*     — Static analysis (I.2, P.8)
+#   modernize-*          — Modern C++ idioms (ES, R, CP sections)
+#   performance-*        — Avoid unnecessary copies/allocations (Per section)
+#   readability-*        — Naming, layout, clarity (NL section)
+#   concurrency-*        — Concurrency safety (CP section)
+#   portability-*        — Cross-platform portability
+#   cert-*               — CERT secure coding (overlaps safety)
+#   misc-*               — Miscellaneous useful checks
+
+Checks: >-
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-avoid-const-params-in-decls,
+  -readability-redundant-access-specifiers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-type-member-init,
+  -cppcoreguidelines-avoid-c-arrays,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-avoid-c-arrays,
+  -bugprone-easily-swappable-parameters,
+  -portability-avoid-pragma-once,
+  -misc-include-cleaner,
+  -misc-const-correctness,
+  -readability-convert-member-functions-to-static,
+  -readability-redundant-member-init,
+  -performance-enum-size,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-pro-bounds-constant-array-index
+
+# Critical checks promoted to errors
+WarningsAsErrors: >-
+  bugprone-use-after-move,
+  bugprone-dangling-handle,
+  cppcoreguidelines-owning-memory,
+  cppcoreguidelines-no-malloc,
+  cppcoreguidelines-slicing,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-loop-convert,
+  performance-unnecessary-copy-initialization,
+  performance-move-const-arg,
+  readability-misleading-indentation
+
+# Apply to project headers only (not third-party / system)
+HeaderFilterRegex: 'include/bintrade/.*\.h(pp)?$|src/.*\.h(pp)?$'
+SystemHeaders: false
+
+# Use the .clang-format file for fix suggestions
+FormatStyle: file
+
+# -------------------------------------------------------------------------
+# Naming Conventions — C++ Core Guidelines (NL.8, NL.9, NL.10)
+#
+#   Namespaces:   lower_case
+#   Classes:      CamelCase
+#   Structs:      CamelCase
+#   Enums:        CamelCase
+#   Enum values:  CamelCase
+#   Functions:    lower_case
+#   Variables:    lower_case
+#   Members:      lower_case_
+#   Constants:    lower_case
+#   Macros:       UPPER_CASE
+#   Templates:    CamelCase
+#   TypeAlias:    CamelCase
+#   Concepts:     CamelCase
+# -------------------------------------------------------------------------
+CheckOptions:
+  # --- Namespaces ---
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+
+  # --- Types ---
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.UnionCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+
+
+  # --- Templates ---
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: lower_case
+
+  # --- Functions / Methods ---
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.MethodCase
+    value: lower_case
+  - key: readability-identifier-naming.VirtualMethodCase
+    value: lower_case
+
+  # --- Variables ---
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalVariablePrefix
+    value: 'g_'
+  - key: readability-identifier-naming.StaticVariableCase
+    value: lower_case
+
+  # --- Members (NL.10 — trailing underscore for private/protected) ---
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ProtectedMemberSuffix
+    value: '_'
+
+  # --- Constants (NL.9 — DO NOT use ALL_CAPS for constants) ---
+  - key: readability-identifier-naming.ConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: lower_case
+
+  # --- Macros (NL.9 — ALL_CAPS only for macros) ---
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+
+  # --- Concepts (C++20 — CamelCase like types) ---
+  - key: readability-identifier-naming.ConceptCase
+    value: CamelCase
+
+  # --- Rule-specific tuning ---
+  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: 'true'
+  - key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions
+    value: 'false'
+  - key: cppcoreguidelines-owning-memory.LegacyResourceProducers
+    value: ''
+  - key: cppcoreguidelines-owning-memory.LegacyResourceConsumers
+    value: ''
+  - key: modernize-use-nullptr.NullMacros
+    value: 'NULL'
+  - key: modernize-use-override.AllowOverrideAndFinal
+    value: 'false'
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '25'
+  - key: readability-function-size.LineThreshold
+    value: '80'
+  - key: readability-function-size.StatementThreshold
+    value: '50'
+  - key: readability-function-size.ParameterThreshold
+    value: '6'
+...
