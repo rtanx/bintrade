@@ -51,13 +51,11 @@ std::error_code make_error_code(ErrorCode e) {
     return {static_cast<int>(e), get_error_category()};
 }
 
-Exception::Exception(std::string message)
-    : code_(make_error_code(ErrorCode::UnknownError)), message_(std::move(message)) {}
+Exception::Exception(std::string message) : code_(make_error_code(ErrorCode::UnknownError)), message_(std::move(message)) {}
 
 Exception::Exception(std::error_code ec) : code_(ec), message_(ec.message()) {}
 
-Exception::Exception(std::error_code ec, std::string message)
-    : code_(ec), message_(std::move(message)) {}
+Exception::Exception(std::error_code ec, std::string message) : code_(ec), message_(std::move(message)) {}
 
 const char* Exception::what() const noexcept {
     return message_.c_str();
@@ -67,8 +65,7 @@ std::error_code Exception::code() const noexcept {
     return code_;
 }
 
-ApiException::ApiException(int http_code, std::string message)
-    : Exception(std::move(message)), http_code_(http_code) {}
+ApiException::ApiException(int http_code, std::string message) : Exception(std::move(message)), http_code_(http_code) {}
 
 int ApiException::http_code() const noexcept {
     return http_code_;

@@ -41,6 +41,11 @@ void Client::set_message_callback(MessageCallback callback) {
 
 void Client::set_error_callback(ErrorCallback callback) {
     impl_->on_error = std::move(callback);
+    impl_->ws.set_error_handler([this](const std::string& msg) {
+        if (impl_->on_error) {
+            impl_->on_error(std::error_code{}, msg);
+        }
+    });
 }
 
 void Client::send(std::string_view message) {

@@ -10,8 +10,7 @@ namespace bintrade {
 
 class Credentials::Impl {
 public:
-    Impl(std::string api_key, std::string api_secret)
-        : api_key_(std::move(api_key)), api_secret_(std::move(api_secret)) {}
+    Impl(std::string api_key, std::string api_secret) : api_key_(std::move(api_key)), api_secret_(std::move(api_secret)) {}
 
     ~Impl() { clear(); }
 
@@ -40,8 +39,7 @@ private:
     std::string api_secret_;
 };
 
-Credentials::Credentials(std::string api_key, std::string api_secret)
-    : impl_(std::make_unique<Impl>(std::move(api_key), std::move(api_secret))) {}
+Credentials::Credentials(std::string api_key, std::string api_secret) : impl_(std::make_unique<Impl>(std::move(api_key), std::move(api_secret))) {}
 
 Credentials::Credentials(Credentials&&) noexcept = default;
 Credentials& Credentials::operator=(Credentials&&) noexcept = default;

@@ -19,8 +19,7 @@ public:
     using Client::Client;
 
     void subscribe_trades(const Symbol& symbol, const TradeCallback& callback);
-    void subscribe_klines(const Symbol& symbol, std::string_view interval,
-                          const KlineCallback& callback);
+    void subscribe_klines(const Symbol& symbol, std::string_view interval, const KlineCallback& callback);
     void subscribe_ticker(const Symbol& symbol, const TickerCallback& callback);
     void subscribe_depth(const Symbol& symbol, const OrderBookCallback& callback);
 };

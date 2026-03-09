@@ -14,8 +14,7 @@ public:
 
     [[nodiscard]] std::string sign(std::string_view query) const;
 
-    [[nodiscard]] std::unordered_map<std::string, std::string>
-    sign_parameters(std::unordered_map<std::string, std::string> params) const;
+    [[nodiscard]] std::unordered_map<std::string, std::string> sign_parameters(std::unordered_map<std::string, std::string> params) const;
 
 private:
     const Credentials& credentials_;

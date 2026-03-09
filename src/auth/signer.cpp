@@ -21,9 +21,8 @@ std::string Signer::sign(std::string_view query) const {
     std::array<unsigned char, EVP_MAX_MD_SIZE> digest{};
     unsigned int digest_len = 0;
 
-    HMAC(EVP_sha256(), secret.data(), static_cast<int>(secret.size()),
-         reinterpret_cast<const unsigned char*>(query.data()), query.size(), digest.data(),
-         &digest_len);
+    HMAC(EVP_sha256(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(query.data()), query.size(),
+         digest.data(), &digest_len);
 
     std::ostringstream hex_stream;
     hex_stream << std::hex << std::setfill('0');
@@ -33,8 +32,7 @@ std::string Signer::sign(std::string_view query) const {
     return hex_stream.str();
 }
 
-std::unordered_map<std::string, std::string>
-Signer::sign_parameters(std::unordered_map<std::string, std::string> params) const {
+std::unordered_map<std::string, std::string> Signer::sign_parameters(std::unordered_map<std::string, std::string> params) const {
     // Add timestamp
     auto now = std::chrono::system_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());

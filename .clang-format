@@ -24,7 +24,7 @@ LambdaBodyIndentation: Signature
 RequiresClausePosition: OwnLine
 
 # --- Column & Line Length ---
-ColumnLimit: 100
+ColumnLimit: 150
 MaxEmptyLinesToKeep: 1
 KeepEmptyLinesAtTheStartOfBlocks: false
 

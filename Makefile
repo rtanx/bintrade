@@ -8,7 +8,7 @@ help: ## Show this help
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 configure-debug: ## Configure debug build
-	cmake --preset debug
+	cmake --preset debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 configure-release: ## Configure release build
 	cmake --preset release

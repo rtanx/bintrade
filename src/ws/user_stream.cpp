@@ -1,24 +1,116 @@
+#include "detail/ws_parse.hpp"
+
+#include <bintrade/core/error.hpp>
 #include <bintrade/ws/user_stream.hpp>
 
-#include <stdexcept>
+// For listen-key lifecycle REST calls we reuse the internal HTTP client
+// directly rather than depending on the public rest:: layer.
+// The src/ directory is on the private include path so these are reachable.
+#include "rest/detail/http_client.hpp"
+#include "rest/detail/json_parse.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <string>
+#include <utility>
 
 namespace bintrade::ws {
 
-UserStream::UserStream(Credentials credentials, WebSocketConfig config)
-    : Client(std::move(config)), credentials_(std::move(credentials)) {}
+UserStream::UserStream(Credentials credentials, RestConfig rest_config, WebSocketConfig ws_config)
+    : Client(std::move(ws_config)), credentials_(std::move(credentials)), rest_config_(std::move(rest_config)) {}
 
+// ---------------------------------------------------------------------------
+// Listen-key REST helpers
+// ---------------------------------------------------------------------------
+std::string UserStream::create_listen_key() {
+    rest::detail::HttpClient http(rest_config_);
+    http.set_api_key(std::string(credentials_.api_key()));
+
+    auto resp = http.post("/api/v3/userDataStream");
+    auto json = rest::detail::parse_response(resp.status_code, resp.body);
+    return json.value("listenKey", "");
+}
+
+void UserStream::renew_listen_key(const std::string& listen_key) {
+    rest::detail::HttpClient http(rest_config_);
+    http.set_api_key(std::string(credentials_.api_key()));
+
+    // The Binance keep-alive endpoint is PUT with listenKey in the body.
+    auto resp = http.post("/api/v3/userDataStream?listenKey=" + listen_key);
+    // A 200 with an empty body is the success response -- just check the status.
+    if (resp.status_code >= 400) {
+        rest::detail::parse_response(resp.status_code, resp.body);  // throws
+    }
+}
+
+void UserStream::delete_listen_key(const std::string& listen_key) {
+    rest::detail::HttpClient http(rest_config_);
+    http.set_api_key(std::string(credentials_.api_key()));
+
+    auto resp = http.del("/api/v3/userDataStream", {{"listenKey", listen_key}});
+    if (resp.status_code >= 400) {
+        rest::detail::parse_response(resp.status_code, resp.body);  // throws
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Message dispatch
+// ---------------------------------------------------------------------------
+void UserStream::dispatch_message(std::string_view raw_json) {
+    try {
+        auto j = nlohmann::json::parse(raw_json);
+        const auto event_type = j.value("e", "");
+
+        if (event_type == "executionReport") {
+            if (order_callback_) {
+                order_callback_(detail::parse_order_update(j));
+            }
+        } else if (event_type == "outboundAccountPosition") {
+            if (account_callback_) {
+                account_callback_(detail::parse_account_update(j));
+            }
+        }
+        // "balanceUpdate" and "listStatus" events are intentionally not
+        // dispatched at this stage; they can be added as needed.
+    } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
+        // Non-fatal: discard unparseable messages.
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 void UserStream::start() {
-    // TODO: POST /api/v3/userDataStream to get listenKey, then connect WS
-    throw std::runtime_error("UserStream::start not implemented");
+    if (!credentials_.has_credentials()) {
+        throw AuthenticationException("UserStream::start requires valid credentials");
+    }
+
+    listen_key_ = create_listen_key();
+    if (listen_key_.empty()) {
+        throw ApiException(0, "Empty listenKey returned by Binance");
+    }
+
+    set_message_callback([this](std::string_view msg) { dispatch_message(msg); });
+
+    connect("/ws/" + listen_key_);
 }
 
 void UserStream::keep_alive() {
-    // TODO: PUT /api/v3/userDataStream with listenKey
-    throw std::runtime_error("UserStream::keep_alive not implemented");
+    if (listen_key_.empty()) {
+        return;
+    }
+    renew_listen_key(listen_key_);
 }
 
 void UserStream::stop() {
-    // TODO: DELETE /api/v3/userDataStream, then disconnect WS
+    if (!listen_key_.empty()) {
+        try {
+            delete_listen_key(listen_key_);
+        } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
+            // Best-effort: disconnect regardless.
+        }
+        listen_key_.clear();
+    }
     disconnect();
 }
 

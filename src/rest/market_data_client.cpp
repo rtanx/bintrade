@@ -1,40 +1,77 @@
+#include "detail/json_parse.hpp"
+
 #include <bintrade/rest/market_data_client.hpp>
 
-#include <stdexcept>
+#include <nlohmann/json.hpp>
+
+#include <string>
+#include <vector>
 
 namespace bintrade::rest {
 
-models::OrderBook MarketDataClient::get_order_book(const Symbol& /*symbol*/, int /*limit*/) {
-    // TODO: GET /api/v3/depth
-    throw std::runtime_error("MarketDataClient::get_order_book not implemented");
+models::OrderBook MarketDataClient::get_order_book(const Symbol& symbol, int limit) {
+    Params params;
+    params["symbol"] = symbol;
+    params["limit"] = std::to_string(limit);
+    auto body = public_get("/api/v3/depth", params);
+    auto json = detail::parse_response(200, body);
+    return detail::parse_order_book(json, symbol);
 }
 
-std::vector<models::Trade> MarketDataClient::get_recent_trades(const Symbol& /*symbol*/,
-                                                               int /*limit*/) {
-    // TODO: GET /api/v3/trades
-    throw std::runtime_error("MarketDataClient::get_recent_trades not implemented");
+std::vector<models::Trade> MarketDataClient::get_recent_trades(const Symbol& symbol, int limit) {
+    Params params;
+    params["symbol"] = symbol;
+    params["limit"] = std::to_string(limit);
+    auto body = public_get("/api/v3/trades", params);
+    auto json = detail::parse_response(200, body);
+    std::vector<models::Trade> trades;
+    trades.reserve(json.size());
+    for (const auto& item : json) {
+        trades.push_back(detail::parse_trade(item));
+    }
+    return trades;
 }
 
-std::vector<models::Kline> MarketDataClient::get_klines(const Symbol& /*symbol*/,
-                                                        std::string_view /*interval*/,
-                                                        int /*limit*/) {
-    // TODO: GET /api/v3/klines
-    throw std::runtime_error("MarketDataClient::get_klines not implemented");
+std::vector<models::Kline> MarketDataClient::get_klines(const Symbol& symbol, std::string_view interval, int limit) {
+    Params params;
+    params["symbol"] = symbol;
+    params["interval"] = std::string(interval);
+    params["limit"] = std::to_string(limit);
+    auto body = public_get("/api/v3/klines", params);
+    auto json = detail::parse_response(200, body);
+    std::vector<models::Kline> klines;
+    klines.reserve(json.size());
+    for (const auto& item : json) {
+        klines.push_back(detail::parse_kline(item));
+    }
+    return klines;
 }
 
-models::Ticker24h MarketDataClient::get_ticker_24h(const Symbol& /*symbol*/) {
-    // TODO: GET /api/v3/ticker/24hr
-    throw std::runtime_error("MarketDataClient::get_ticker_24h not implemented");
+models::Ticker24h MarketDataClient::get_ticker_24h(const Symbol& symbol) {
+    Params params;
+    params["symbol"] = symbol;
+    auto body = public_get("/api/v3/ticker/24hr", params);
+    auto json = detail::parse_response(200, body);
+    return detail::parse_ticker_24h(json);
 }
 
-models::Ticker MarketDataClient::get_price_ticker(const Symbol& /*symbol*/) {
-    // TODO: GET /api/v3/ticker/price
-    throw std::runtime_error("MarketDataClient::get_price_ticker not implemented");
+models::Ticker MarketDataClient::get_price_ticker(const Symbol& symbol) {
+    Params params;
+    params["symbol"] = symbol;
+    auto body = public_get("/api/v3/ticker/price", params);
+    auto json = detail::parse_response(200, body);
+    return detail::parse_ticker(json);
 }
 
 std::vector<models::Ticker> MarketDataClient::get_all_price_tickers() {
-    // TODO: GET /api/v3/ticker/price
-    throw std::runtime_error("MarketDataClient::get_all_price_tickers not implemented");
+    auto body = public_get("/api/v3/ticker/price");
+    auto json = detail::parse_response(200, body);
+    std::vector<models::Ticker> tickers;
+    tickers.reserve(json.size());
+    for (const auto& item : json) {
+        tickers.push_back(detail::parse_ticker(item));
+    }
+    return tickers;
 }
 
 }  // namespace bintrade::rest

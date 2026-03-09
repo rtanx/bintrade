@@ -13,8 +13,7 @@ public:
     using Client::Client;
 
     [[nodiscard]] models::AccountInfo get_account_info();
-    [[nodiscard]] std::vector<models::AccountTrade> get_account_trades(const Symbol& symbol,
-                                                                       int limit = 500);
+    [[nodiscard]] std::vector<models::AccountTrade> get_account_trades(const Symbol& symbol, int limit = 500);
 };
 
 }  // namespace bintrade::rest

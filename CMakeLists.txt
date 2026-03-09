@@ -24,6 +24,9 @@ option(BINTRADE_BUILD_TESTS "Build tests" ON)
 option(BINTRADE_BUILD_EXAMPLES "Build examples" ON)
 option(BINTRADE_BUILD_SHARED "Build shared library" OFF)
 
+# Ensure imported targets use -isystem (suppresses warnings in third-party headers)
+set(CMAKE_NO_SYSTEM_FROM_IMPORTED OFF)
+
 # Dependencies (via vcpkg)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(nlohmann_json CONFIG REQUIRED)
