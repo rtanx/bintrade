@@ -10,8 +10,7 @@ int main() {
         std::cout << "BTC/USDT Price: $" << ticker.price << "\n";
 
         auto orderbook = client.get_order_book("BTCUSDT", 5);
-        std::cout << "Order book entries: " << orderbook.bids.size() << " bids, "
-                  << orderbook.asks.size() << " asks\n";
+        std::cout << "Order book entries: " << orderbook.bids.size() << " bids, " << orderbook.asks.size() << " asks\n";
 
     } catch (const bintrade::Exception& e) {
         std::cerr << "Bintrade error: " << e.what() << "\n";

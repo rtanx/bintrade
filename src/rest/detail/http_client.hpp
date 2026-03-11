@@ -1,5 +1,7 @@
 #pragma once
 
+#include "http_transport.hpp"
+
 #include <bintrade/core/config.hpp>
 
 #include <memory>
@@ -8,34 +10,25 @@
 
 namespace bintrade::rest::detail {
 
-class HttpClient {
+/// Production HTTP transport backed by Boost.Beast over TLS.
+class HttpClient final : public HttpTransport {
 public:
     explicit HttpClient(RestConfig config);
-    ~HttpClient();
+    ~HttpClient() override;
 
     HttpClient(const HttpClient&) = delete;
     HttpClient& operator=(const HttpClient&) = delete;
-    HttpClient(HttpClient&&) noexcept;
-    HttpClient& operator=(HttpClient&&) noexcept;
+    HttpClient(HttpClient&&) = delete;
+    HttpClient& operator=(HttpClient&&) = delete;
 
-    struct Response {
-        int status_code = 0;
-        std::string body;
-        std::unordered_map<std::string, std::string> headers;
-    };
+    void set_api_key(std::string api_key) override;
 
-    /// Set the API key for X-MBX-APIKEY header injection.
-    void set_api_key(std::string api_key);
+    [[nodiscard]] HttpResponse get(const std::string& path, const std::unordered_map<std::string, std::string>& params = {}) override;
 
-    /// HTTP GET with optional query params.
-    [[nodiscard]] Response get(const std::string& path, const std::unordered_map<std::string, std::string>& params = {});
+    [[nodiscard]] HttpResponse post(const std::string& path, const std::string& body = {},
+                                    const std::unordered_map<std::string, std::string>& headers = {}) override;
 
-    /// HTTP POST with body and optional extra headers.
-    [[nodiscard]] Response post(const std::string& path, const std::string& body = {},
-                                const std::unordered_map<std::string, std::string>& headers = {});
-
-    /// HTTP DELETE with optional query params.
-    [[nodiscard]] Response del(const std::string& path, const std::unordered_map<std::string, std::string>& params = {});
+    [[nodiscard]] HttpResponse del(const std::string& path, const std::unordered_map<std::string, std::string>& params = {}) override;
 
 private:
     struct Impl;

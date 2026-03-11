@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(StandardProjectSettings)
 include(CompilerWarnings)
 include(Sanitizers)
+include(Coverage)
 
 # Build options
 option(BINTRADE_BUILD_TESTS "Build tests" ON)
@@ -95,6 +96,7 @@ target_link_libraries(bintrade
 
 set_project_warnings(bintrade)
 enable_sanitizers(bintrade)
+enable_coverage(bintrade)
 
 # Tests
 if(BINTRADE_BUILD_TESTS)

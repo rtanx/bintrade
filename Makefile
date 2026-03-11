@@ -1,4 +1,4 @@
-.PHONY: help configure-debug configure-release build build-debug build-release test clean format lint lint-fix install
+.PHONY: help configure-debug configure-release configure-coverage build build-debug build-release test coverage coverage-report clean format lint lint-fix install
 
 BUILD_TYPE ?= debug
 BUILD_DIR  := build/$(BUILD_TYPE)
@@ -13,6 +13,9 @@ configure-debug: ## Configure debug build
 configure-release: ## Configure release build
 	cmake --preset release
 
+configure-coverage: ## Configure coverage build (requires gcovr: pip install gcovr)
+	cmake --preset coverage
+
 build-debug: configure-debug ## Build debug configuration
 	cmake --build build/debug --parallel
 
@@ -24,6 +27,22 @@ build: ## Build current configuration (BUILD_TYPE=debug)
 
 test: ## Run tests
 	ctest --test-dir $(BUILD_DIR) --output-on-failure
+
+coverage: configure-coverage ## Build, run tests, and generate HTML coverage report (build/coverage/report/index.html)
+	cmake --build build/coverage --parallel
+	ctest --test-dir build/coverage --output-on-failure
+	mkdir -p build/coverage/report
+	gcovr \
+		--root $(CURDIR) \
+		--object-directory build/coverage \
+		--exclude '$(CURDIR)/build/.*' \
+		--exclude '$(CURDIR)/tests/.*' \
+		--exclude '$(CURDIR)/examples/.*' \
+		--html-details build/coverage/report/index.html \
+		--print-summary
+
+coverage-report: ## Open the HTML coverage report in the browser
+	open build/coverage/report/index.html
 
 clean: ## Remove all build artifacts
 	rm -rf build

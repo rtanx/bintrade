@@ -8,7 +8,7 @@ namespace bintrade {
 
 class Credentials {
 public:
-    Credentials() = default;
+    Credentials();
     Credentials(std::string api_key, std::string api_secret);
 
     Credentials(const Credentials&) = delete;

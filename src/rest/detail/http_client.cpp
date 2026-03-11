@@ -2,6 +2,7 @@
 
 #include <bintrade/core/error.hpp>
 
+#include <algorithm>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -90,8 +91,8 @@ struct HttpClient::Impl {
 
     explicit Impl(RestConfig cfg) : config(std::move(cfg)), parsed_url(ParsedUrl::from(config.base_url)) {}
 
-    [[nodiscard]] Response execute(http::verb method, const std::string& target, const std::string& body,
-                                   const std::unordered_map<std::string, std::string>& extra_headers) const {
+    [[nodiscard]] HttpResponse execute(http::verb method, const std::string& target, const std::string& body,
+                                       const std::unordered_map<std::string, std::string>& extra_headers) const {
         asio::io_context ioc;
         ssl::context ctx(ssl::context::tlsv12_client);
         ctx.set_default_verify_paths();
@@ -110,6 +111,9 @@ struct HttpClient::Impl {
         const auto results = resolver.resolve(parsed_url.host, parsed_url.port);
         beast::get_lowest_layer(stream).expires_after(config.timeout);
         beast::get_lowest_layer(stream).connect(results);
+
+        // Disable Nagle's algorithm for lower round-trip latency.
+        beast::get_lowest_layer(stream).socket().set_option(Tcp::no_delay(true));
 
         // SSL handshake
         stream.handshake(ssl::stream_base::client);
@@ -143,12 +147,15 @@ struct HttpClient::Impl {
         http::response<http::string_body> res;
         http::read(stream, buffer, res);
 
-        // Build response object
-        Response response;
+        // Build response object. Header names are lowercased for case-insensitive
+        // lookup by the rate-limit tracker and any other header consumers.
+        HttpResponse response;
         response.status_code = static_cast<int>(res.result_int());
         response.body = std::move(res.body());
         for (const auto& field : res) {
-            response.headers[std::string(field.name_string())] = std::string(field.value());
+            auto name = std::string(field.name_string());
+            std::ranges::transform(name, name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            response.headers[std::move(name)] = std::string(field.value());
         }
 
         // Graceful SSL shutdown (ignore errors — server may close first)
@@ -165,14 +172,12 @@ struct HttpClient::Impl {
 // ---------------------------------------------------------------------------
 HttpClient::HttpClient(RestConfig config) : impl_(std::make_unique<Impl>(std::move(config))) {}
 HttpClient::~HttpClient() = default;
-HttpClient::HttpClient(HttpClient&&) noexcept = default;
-HttpClient& HttpClient::operator=(HttpClient&&) noexcept = default;
 
 void HttpClient::set_api_key(std::string api_key) {
     impl_->api_key = std::move(api_key);
 }
 
-HttpClient::Response HttpClient::get(const std::string& path, const std::unordered_map<std::string, std::string>& params) {
+HttpResponse HttpClient::get(const std::string& path, const std::unordered_map<std::string, std::string>& params) {
     auto query = build_query_string(params);
     auto target = path;
     if (!query.empty()) {
@@ -182,11 +187,11 @@ HttpClient::Response HttpClient::get(const std::string& path, const std::unorder
     return impl_->execute(http::verb::get, target, {}, {});
 }
 
-HttpClient::Response HttpClient::post(const std::string& path, const std::string& body, const std::unordered_map<std::string, std::string>& headers) {
+HttpResponse HttpClient::post(const std::string& path, const std::string& body, const std::unordered_map<std::string, std::string>& headers) {
     return impl_->execute(http::verb::post, path, body, headers);
 }
 
-HttpClient::Response HttpClient::del(const std::string& path, const std::unordered_map<std::string, std::string>& params) {
+HttpResponse HttpClient::del(const std::string& path, const std::unordered_map<std::string, std::string>& params) {
     auto query = build_query_string(params);
     auto target = path;
     if (!query.empty()) {

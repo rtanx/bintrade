@@ -18,6 +18,10 @@
 #include <random>
 #include <string>
 #include <thread>
+#ifdef __linux__
+#    include <pthread.h>
+#    include <sched.h>
+#endif
 
 namespace bintrade::ws::detail {
 
@@ -136,6 +140,9 @@ struct WebSocketClient::Impl {
 
             beast::get_lowest_layer(*ws).expires_after(config.ping_interval);
             beast::get_lowest_layer(*ws).connect(endpoints);
+
+            // Disable Nagle's algorithm for lower round-trip latency.
+            beast::get_lowest_layer(*ws).socket().set_option(Tcp::no_delay(true));
 
             beast::get_lowest_layer(*ws).expires_after(config.ping_interval);
             ws->next_layer().handshake(ssl::stream_base::client);
@@ -330,6 +337,14 @@ void WebSocketClient::connect(const std::string& stream_path) {
     // Launch the I/O thread. It will call do_connect() which eventually
     // calls notify_connect() to unblock the wait below.
     impl_->io_thread = std::thread([this]() {
+#ifdef __linux__
+        if (impl_->config.io_core_id >= 0) {
+            cpu_set_t cpu_set;
+            CPU_ZERO(&cpu_set);
+            CPU_SET(static_cast<std::size_t>(impl_->config.io_core_id), &cpu_set);
+            pthread_setaffinity_np(pthread_self(), sizeof(cpu_set), &cpu_set);
+        }
+#endif
         impl_->do_connect();
         impl_->ioc.run();
     });

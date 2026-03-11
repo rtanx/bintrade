@@ -6,7 +6,18 @@
 #include <bintrade/models/order.hpp>
 #include <bintrade/ws/client.hpp>
 
+#include <condition_variable>
 #include <functional>
+#include <memory>
+#include <mutex>
+#include <thread>
+
+// Forward-declare the internal HTTP transport in its actual namespace so the
+// protected test-injection constructor can accept it without pulling
+// Boost/Beast into public headers.
+namespace bintrade::rest::detail {
+class HttpTransport;
+}  // namespace bintrade::rest::detail
 
 namespace bintrade::ws {
 
@@ -44,14 +55,32 @@ private:
     AccountUpdateCallback account_callback_;
     OrderUpdateCallback order_callback_;
 
+    // Injected HTTP transport (non-null only when constructed via the
+    // test-injection constructor; nullptr in production).
+    std::unique_ptr<::bintrade::rest::detail::HttpTransport> rest_http_;
+
     // Returns the listen key from Binance (POST /api/v3/userDataStream).
     [[nodiscard]] std::string create_listen_key();
     void renew_listen_key(const std::string& listen_key);
     void delete_listen_key(const std::string& listen_key);
 
+protected:
+    // Test-injection constructor: accepts a pre-built HTTP transport so unit
+    // tests can mock listen-key lifecycle calls without hitting the network.
+    // Only usable from code that includes the internal detail headers.
+    UserStream(Credentials credentials, std::unique_ptr<::bintrade::rest::detail::HttpTransport> http, WebSocketConfig ws_config = WebSocketConfig{});
+
     // Dispatch an incoming user-data-stream JSON message to the appropriate
-    // typed callback.
+    // typed callback. Protected to allow direct testing without a live connection.
     void dispatch_message(std::string_view raw_json);
+
+private:
+    // Background thread that renews the listen key every 25 minutes.
+    // Interruptible via keep_alive_cv_ -- stop() wakes the thread early.
+    std::thread keep_alive_thread_;
+    std::mutex keep_alive_mutex_;
+    std::condition_variable keep_alive_cv_;
+    bool stop_keep_alive_{false};  // guarded by keep_alive_mutex_
 };
 
 }  // namespace bintrade::ws

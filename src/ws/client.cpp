@@ -19,7 +19,17 @@ Client::Client(Client&&) noexcept = default;
 Client& Client::operator=(Client&&) noexcept = default;
 
 void Client::connect(std::string_view stream_name) {
+    do_connect(stream_name);
+}
+
+void Client::do_connect(std::string_view stream_name) {
     impl_->ws.connect(std::string(stream_name));
+}
+
+void Client::deliver_message(std::string_view msg) {
+    if (impl_->on_message) {
+        impl_->on_message(msg);
+    }
 }
 
 void Client::disconnect() {

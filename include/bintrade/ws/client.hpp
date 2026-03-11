@@ -34,6 +34,15 @@ public:
 protected:
     struct Impl;
     std::unique_ptr<Impl> impl_;
+
+    // Deliver a raw message to the registered on-message callback.
+    // Protected so test subclasses can inject messages without a live connection.
+    void deliver_message(std::string_view msg);
+
+    // Connection NVI hook. Override in test subclasses to suppress real
+    // network I/O and capture the stream path. The default implementation
+    // delegates to the embedded WebSocketClient.
+    virtual void do_connect(std::string_view stream_name);
 };
 
 }  // namespace bintrade::ws

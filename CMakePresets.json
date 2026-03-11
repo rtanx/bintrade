@@ -51,6 +51,19 @@
         "BINTRADE_BUILD_TESTS": "ON",
         "BINTRADE_BUILD_EXAMPLES": "ON"
       }
+    },
+    {
+      "name": "coverage",
+      "displayName": "Coverage",
+      "description": "Debug build with coverage instrumentation (requires gcovr)",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/coverage",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BINTRADE_BUILD_TESTS": "ON",
+        "BINTRADE_BUILD_EXAMPLES": "OFF",
+        "ENABLE_COVERAGE": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -65,12 +78,23 @@
     {
       "name": "relwithdebinfo",
       "configurePreset": "relwithdebinfo"
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage"
     }
   ],
   "testPresets": [
     {
       "name": "debug",
       "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage",
       "output": {
         "outputOnFailure": true
       }

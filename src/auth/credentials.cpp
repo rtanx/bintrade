@@ -39,6 +39,8 @@ private:
     std::string api_secret_;
 };
 
+Credentials::Credentials() = default;
+
 Credentials::Credentials(std::string api_key, std::string api_secret) : impl_(std::make_unique<Impl>(std::move(api_key), std::move(api_secret))) {}
 
 Credentials::Credentials(Credentials&&) noexcept = default;
