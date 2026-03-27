@@ -6,3 +6,6 @@ target_link_libraries(place_order_example PRIVATE bintrade::bintrade)
 
 add_executable(websocket_stream_example websocket_stream_example.cpp)
 target_link_libraries(websocket_stream_example PRIVATE bintrade::bintrade)
+
+add_executable(async_market_data_example async_market_data_example.cpp)
+target_link_libraries(async_market_data_example PRIVATE bintrade::bintrade)

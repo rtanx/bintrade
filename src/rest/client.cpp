@@ -7,6 +7,7 @@
 #include <bintrade/rest/client.hpp>
 
 #include <atomic>
+#include <boost/asio/awaitable.hpp>
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -15,6 +16,8 @@
 #include <utility>
 
 namespace bintrade::rest {
+
+namespace asio = boost::asio;
 
 // ---------------------------------------------------------------------------
 // Client::Impl -- holds the HTTP transport + optional auth components
@@ -95,7 +98,7 @@ Client::Client(Client&&) noexcept = default;
 Client& Client::operator=(Client&&) noexcept = default;
 
 // ---------------------------------------------------------------------------
-// Public API — basic endpoints
+// Public sync API -- basic endpoints
 // ---------------------------------------------------------------------------
 bool Client::ping() {
     auto resp = impl_->http->get("/api/v3/ping");
@@ -124,7 +127,7 @@ int32_t Client::order_count_1d() const noexcept {
 }
 
 // ---------------------------------------------------------------------------
-// Protected helpers — auth wiring for subclasses
+// Protected sync helpers -- auth wiring for subclasses
 // ---------------------------------------------------------------------------
 std::string Client::public_get(const std::string& path, const Params& params) {
     auto resp = impl_->http->get(path, params);
@@ -175,6 +178,78 @@ std::string Client::signed_delete(const std::string& path, Params params) {
         detail::parse_response(resp.status_code, resp.body);  // throws
     }
     return resp.body;
+}
+
+// ---------------------------------------------------------------------------
+// Public async API
+// ---------------------------------------------------------------------------
+
+asio::awaitable<bool> Client::async_ping() {
+    auto resp = co_await impl_->http->async_get("/api/v3/ping");
+    impl_->update_rate_limits(resp);
+    co_return resp.status_code == 200;
+}
+
+asio::awaitable<Timestamp> Client::async_server_time() {
+    auto resp = co_await impl_->http->async_get("/api/v3/time");
+    impl_->update_rate_limits(resp);
+    auto json = detail::parse_response(resp.status_code, resp.body);
+    auto ms = json.value("serverTime", int64_t{0});
+    co_return Timestamp(std::chrono::milliseconds(ms));
+}
+
+// ---------------------------------------------------------------------------
+// Protected async helpers -- auth wiring for sub-client async methods
+// ---------------------------------------------------------------------------
+
+asio::awaitable<std::string> Client::async_public_get(std::string path, Params params) {
+    auto resp = co_await impl_->http->async_get(path, params);
+    impl_->update_rate_limits(resp);
+    if (resp.status_code >= 400) {
+        detail::parse_response(resp.status_code, resp.body);  // throws
+    }
+    co_return resp.body;
+}
+
+asio::awaitable<std::string> Client::async_signed_get(std::string path, Params params) {
+    impl_->sign_params(params);
+    auto resp = co_await impl_->http->async_get(path, params);
+    impl_->update_rate_limits(resp);
+    if (resp.status_code >= 400) {
+        detail::parse_response(resp.status_code, resp.body);  // throws
+    }
+    co_return resp.body;
+}
+
+asio::awaitable<std::string> Client::async_signed_post(std::string path, Params params) {
+    impl_->sign_params(params);
+
+    std::string body;
+    for (const auto& [key, value] : params) {
+        if (!body.empty()) {
+            body += '&';
+        }
+        body += key;
+        body += '=';
+        body += value;
+    }
+
+    auto resp = co_await impl_->http->async_post(path, body);
+    impl_->update_rate_limits(resp);
+    if (resp.status_code >= 400) {
+        detail::parse_response(resp.status_code, resp.body);  // throws
+    }
+    co_return resp.body;
+}
+
+asio::awaitable<std::string> Client::async_signed_delete(std::string path, Params params) {
+    impl_->sign_params(params);
+    auto resp = co_await impl_->http->async_del(path, params);
+    impl_->update_rate_limits(resp);
+    if (resp.status_code >= 400) {
+        detail::parse_response(resp.status_code, resp.body);  // throws
+    }
+    co_return resp.body;
 }
 
 }  // namespace bintrade::rest

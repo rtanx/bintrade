@@ -4,6 +4,7 @@
 #include <bintrade/core/config.hpp>
 #include <bintrade/core/types.hpp>
 
+#include <boost/asio/awaitable.hpp>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -29,6 +30,9 @@ public:
     Client(Client&&) noexcept;
     Client& operator=(Client&&) noexcept;
 
+    // -----------------------------------------------------------------------
+    // Synchronous API
+    // -----------------------------------------------------------------------
     [[nodiscard]] bool ping();
     [[nodiscard]] Timestamp server_time();
 
@@ -38,6 +42,16 @@ public:
     [[nodiscard]] int32_t used_weight_1m() const noexcept;
     [[nodiscard]] int32_t order_count_10s() const noexcept;
     [[nodiscard]] int32_t order_count_1d() const noexcept;
+
+    // -----------------------------------------------------------------------
+    // Asynchronous API
+    //
+    // These coroutines return boost::asio::awaitable<T>.  They are safe to
+    // co_await from any Asio executor; internally they dispatch HTTP I/O to
+    // the HttpClient's private io_context.
+    // -----------------------------------------------------------------------
+    [[nodiscard]] boost::asio::awaitable<bool> async_ping();
+    [[nodiscard]] boost::asio::awaitable<Timestamp> async_server_time();
 
 protected:
     struct Impl;
@@ -50,17 +64,21 @@ protected:
     explicit Client(std::unique_ptr<detail::HttpTransport> transport);
     Client(std::unique_ptr<detail::HttpTransport> transport, Credentials credentials);
 
-    /// Unsigned GET -- for public/market-data endpoints.
+    // -----------------------------------------------------------------------
+    // Synchronous helpers for sub-client implementations.
+    // -----------------------------------------------------------------------
     [[nodiscard]] std::string public_get(const std::string& path, const Params& params = {});
-
-    /// Signed GET -- adds timestamp + HMAC-SHA256 signature.
     [[nodiscard]] std::string signed_get(const std::string& path, Params params = {});
-
-    /// Signed POST -- adds timestamp + HMAC-SHA256 signature.
     [[nodiscard]] std::string signed_post(const std::string& path, Params params = {});
-
-    /// Signed DELETE -- adds timestamp + HMAC-SHA256 signature.
     [[nodiscard]] std::string signed_delete(const std::string& path, Params params = {});
+
+    // -----------------------------------------------------------------------
+    // Asynchronous helpers for sub-client implementations.
+    // -----------------------------------------------------------------------
+    [[nodiscard]] boost::asio::awaitable<std::string> async_public_get(std::string path, Params params = {});
+    [[nodiscard]] boost::asio::awaitable<std::string> async_signed_get(std::string path, Params params = {});
+    [[nodiscard]] boost::asio::awaitable<std::string> async_signed_post(std::string path, Params params = {});
+    [[nodiscard]] boost::asio::awaitable<std::string> async_signed_delete(std::string path, Params params = {});
 };
 
 }  // namespace bintrade::rest
