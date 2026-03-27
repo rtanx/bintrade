@@ -15,6 +15,7 @@ add_executable(bintrade_tests
     unit/rest/market_data_client_test.cpp
     unit/rest/trading_client_test.cpp
     unit/rest/account_client_test.cpp
+    unit/rest/async_client_test.cpp
     # WebSocket detail parsers (include private src/ headers)
     unit/ws/detail/ws_parse_test.cpp
     # WebSocket UserStream tests
