@@ -64,6 +64,19 @@
         "BINTRADE_BUILD_EXAMPLES": "OFF",
         "ENABLE_COVERAGE": "ON"
       }
+    },
+    {
+      "name": "bench",
+      "displayName": "Benchmark",
+      "description": "Release build with benchmarks enabled",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/bench",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BINTRADE_BUILD_TESTS": "OFF",
+        "BINTRADE_BUILD_EXAMPLES": "OFF",
+        "BINTRADE_BUILD_BENCHMARKS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -82,6 +95,10 @@
     {
       "name": "coverage",
       "configurePreset": "coverage"
+    },
+    {
+      "name": "bench",
+      "configurePreset": "bench"
     }
   ],
   "testPresets": [

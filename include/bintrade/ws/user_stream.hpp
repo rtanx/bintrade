@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 
 // Forward-declare the internal HTTP transport in its actual namespace so the
@@ -29,6 +30,16 @@ public:
     // rest_config is used for the listen-key lifecycle REST calls
     // (POST/PUT/DELETE /api/v3/userDataStream).
     explicit UserStream(Credentials credentials, RestConfig rest_config = RestConfig{}, WebSocketConfig ws_config = WebSocketConfig{});
+    ~UserStream() override;
+
+    UserStream(const UserStream&) = delete;
+    UserStream& operator=(const UserStream&) = delete;
+    UserStream(UserStream&&) = delete;
+    UserStream& operator=(UserStream&&) = delete;
+
+    // Set the dispatch mode. Must be called before start().
+    // Default is DispatchMode::Inline (current behaviour).
+    void set_dispatch_mode(DispatchMode mode);
 
     // Start the user data stream:
     //   1. POST /api/v3/userDataStream -> obtain listenKey
@@ -55,6 +66,15 @@ private:
     AccountUpdateCallback account_callback_;
     OrderUpdateCallback order_callback_;
 
+    DispatchMode dispatch_mode_ = DispatchMode::Inline;
+    bool started_ = false;  // Guards set_dispatch_mode after start.
+
+    struct QueueState;
+    std::unique_ptr<QueueState> queue_state_;
+
+    void start_consumer();
+    void stop_consumer();
+
     // Injected HTTP transport (non-null only when constructed via the
     // test-injection constructor; nullptr in production).
     std::unique_ptr<::bintrade::rest::detail::HttpTransport> rest_http_;
@@ -73,6 +93,11 @@ protected:
     // Dispatch an incoming user-data-stream JSON message to the appropriate
     // typed callback. Protected to allow direct testing without a live connection.
     void dispatch_message(std::string_view raw_json);
+
+    // NVI hook for message dispatch. TypedUserStream<Handler> overrides this
+    // to route events to the handler's typed methods via CRTP.
+    // The default implementation uses the std::function callbacks.
+    virtual void do_dispatch(std::string_view raw_json);
 
 private:
     // Background thread that renews the listen key every 25 minutes.
