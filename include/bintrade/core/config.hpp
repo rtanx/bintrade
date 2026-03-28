@@ -6,6 +6,13 @@
 
 namespace bintrade {
 
+// Controls how WebSocket messages are dispatched from the I/O thread
+// to user callbacks.
+enum class DispatchMode {
+    Inline,  // Parse JSON and invoke callbacks directly on the I/O thread (default).
+    Queued   // Enqueue raw messages to an SPSC ring buffer; a consumer thread parses and dispatches.
+};
+
 struct RestConfig {
     std::string base_url = "https://api.binance.com";
     std::chrono::seconds timeout = std::chrono::seconds(30);

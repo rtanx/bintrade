@@ -3,6 +3,7 @@
 // Core
 #include <bintrade/core/config.hpp>
 #include <bintrade/core/error.hpp>
+#include <bintrade/core/spsc_queue.hpp>
 #include <bintrade/core/types.hpp>
 
 // Auth
@@ -24,7 +25,10 @@
 
 // WebSocket
 #include <bintrade/ws/client.hpp>
+#include <bintrade/ws/handler_traits.hpp>
 #include <bintrade/ws/market_stream.hpp>
+#include <bintrade/ws/typed_market_stream.hpp>
+#include <bintrade/ws/typed_user_stream.hpp>
 #include <bintrade/ws/user_stream.hpp>
 
 // Version

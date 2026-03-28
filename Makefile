@@ -1,4 +1,4 @@
-.PHONY: help configure-debug configure-release configure-coverage build build-debug build-release test coverage coverage-report clean format lint lint-fix install
+.PHONY: help configure-debug configure-release configure-coverage configure-bench build build-debug build-release test bench coverage coverage-report clean format lint lint-fix install
 
 BUILD_TYPE ?= debug
 BUILD_DIR  := build/$(BUILD_TYPE)
@@ -16,6 +16,9 @@ configure-release: ## Configure release build
 configure-coverage: ## Configure coverage build (requires gcovr: pip install gcovr)
 	cmake --preset coverage
 
+configure-bench: ## Configure benchmark build (Release)
+	cmake --preset bench
+
 build-debug: configure-debug ## Build debug configuration
 	cmake --build build/debug --parallel
 
@@ -27,6 +30,10 @@ build: ## Build current configuration (BUILD_TYPE=debug)
 
 test: ## Run tests
 	ctest --test-dir $(BUILD_DIR) --output-on-failure
+
+bench: configure-bench ## Build and run benchmarks (Release)
+	cmake --build build/bench --parallel
+	./build/bench/benchmarks/bintrade_benchmarks --benchmark_format=console --benchmark_counters_tabular=true
 
 coverage: configure-coverage ## Build, run tests, and generate HTML coverage report (build/coverage/report/index.html)
 	cmake --build build/coverage --parallel

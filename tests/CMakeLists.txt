@@ -5,6 +5,7 @@ add_executable(bintrade_tests
     # core
     unit/core/types_test.cpp
     unit/core/error_test.cpp
+    unit/core/spsc_queue_test.cpp
     # auth
     unit/auth/signer_test.cpp
     unit/auth/credentials_test.cpp
@@ -22,6 +23,12 @@ add_executable(bintrade_tests
     unit/ws/user_stream_test.cpp
     # WebSocket MarketStream dispatch tests
     unit/ws/market_stream_test.cpp
+    # CRTP typed stream tests
+    unit/ws/typed_market_stream_test.cpp
+    unit/ws/typed_user_stream_test.cpp
+    # Dispatch mode tests
+    unit/ws/market_stream_dispatch_test.cpp
+    unit/ws/user_stream_dispatch_test.cpp
 )
 
 target_include_directories(bintrade_tests
