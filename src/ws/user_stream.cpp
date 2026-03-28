@@ -1,5 +1,3 @@
-#include "detail/ws_parse.hpp"
-
 #include <bintrade/core/error.hpp>
 #include <bintrade/core/spsc_queue.hpp>
 #include <bintrade/ws/user_stream.hpp>
@@ -7,6 +5,7 @@
 // For listen-key lifecycle REST calls we reuse the internal HTTP client
 // directly rather than depending on the public rest:: layer.
 // The src/ directory is on the private include path so these are reachable.
+#include "bintrade/ws/detail/ws_parse.hpp"
 #include "rest/detail/http_client.hpp"
 #include "rest/detail/json_parse.hpp"
 
@@ -24,7 +23,7 @@ namespace bintrade::ws {
 // QueueState -- SPSC queue + consumer thread for DispatchMode::Queued.
 // -----------------------------------------------------------------------
 struct UserStream::QueueState {
-    static constexpr std::size_t k_queue_capacity = 4096;
+    static constexpr std::size_t k_queue_capacity = 4'096;
 
     SpscQueue<std::string, k_queue_capacity> queue;
     std::thread consumer_thread;
@@ -189,9 +188,7 @@ void UserStream::start() {
         if (!queue_state_) {
             queue_state_ = std::make_unique<QueueState>();
         }
-        set_message_callback([state = queue_state_.get()](std::string_view msg) {
-            (void)state->queue.try_push(std::string(msg));
-        });
+        set_message_callback([state = queue_state_.get()](std::string_view msg) { (void)state->queue.try_push(std::string(msg)); });
         start_consumer();
     } else {
         set_message_callback([this](std::string_view msg) { dispatch_message(msg); });

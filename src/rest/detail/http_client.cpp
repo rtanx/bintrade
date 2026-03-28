@@ -286,7 +286,7 @@ struct HttpClient::Impl {
         req.set(http::field::connection, "keep-alive");
 
         {
-            std::lock_guard<std::mutex> lk(api_key_mutex_);
+            std::scoped_lock<std::mutex> lk(api_key_mutex_);
             if (!api_key_.empty()) {
                 req.set("X-MBX-APIKEY", api_key_);
             }
@@ -410,7 +410,7 @@ HttpClient::HttpClient(RestConfig config, std::size_t pool_size) : impl_(std::ma
 HttpClient::~HttpClient() = default;
 
 void HttpClient::set_api_key(std::string api_key) {
-    std::lock_guard<std::mutex> lk(impl_->api_key_mutex_);
+    std::scoped_lock<std::mutex> lk(impl_->api_key_mutex_);
     impl_->api_key_ = std::move(api_key);
 }
 

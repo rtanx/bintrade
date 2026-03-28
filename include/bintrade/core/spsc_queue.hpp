@@ -39,18 +39,15 @@ inline constexpr std::size_t k_cache_line_size =
 ///   auto msg = q.try_pop();  // optional<string>
 template <typename T, std::size_t Capacity>
 class SpscQueue {
-    static_assert(Capacity > 0 && (Capacity & (Capacity - 1)) == 0,
-                  "SpscQueue capacity must be a power of two");
-    static_assert(std::is_nothrow_move_constructible_v<T>,
-                  "SpscQueue element type must be nothrow move constructible");
+    static_assert(Capacity > 0 && (Capacity & (Capacity - 1)) == 0, "SpscQueue capacity must be a power of two");
+    static_assert(std::is_nothrow_move_constructible_v<T>, "SpscQueue element type must be nothrow move constructible");
 
 public:
     SpscQueue() noexcept = default;
 
     ~SpscQueue() noexcept {
         // Drain remaining elements so their destructors run.
-        while (try_pop().has_value()) {
-        }
+        while (try_pop().has_value()) {}
     }
 
     SpscQueue(const SpscQueue&) = delete;
@@ -58,9 +55,26 @@ public:
     SpscQueue(SpscQueue&&) = delete;
     SpscQueue& operator=(SpscQueue&&) = delete;
 
-    /// Enqueue an element. Returns false if the queue is full.
+    /// Enqueue an element (lvalue). Returns false if the queue is full.
+    /// The source is not modified when the queue is full.
     /// Must be called from the producer thread only.
-    [[nodiscard]] bool try_push(T value) noexcept {
+    [[nodiscard]] bool try_push(const T& value) noexcept(std::is_nothrow_copy_assignable_v<T>) {
+        const auto head = head_.load(std::memory_order_relaxed);
+        const auto tail = tail_.load(std::memory_order_acquire);
+
+        if (head - tail >= Capacity) {
+            return false;  // Full.
+        }
+
+        buffer_[head & k_mask] = value;
+        head_.store(head + 1, std::memory_order_release);
+        return true;
+    }
+
+    /// Enqueue an element (rvalue). Returns false if the queue is full.
+    /// The source is not modified when the queue is full.
+    /// Must be called from the producer thread only.
+    [[nodiscard]] bool try_push(T&& value) noexcept {
         const auto head = head_.load(std::memory_order_relaxed);
         const auto tail = tail_.load(std::memory_order_acquire);
 

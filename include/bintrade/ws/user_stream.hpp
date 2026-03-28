@@ -32,6 +32,11 @@ public:
     explicit UserStream(Credentials credentials, RestConfig rest_config = RestConfig{}, WebSocketConfig ws_config = WebSocketConfig{});
     ~UserStream() override;
 
+    UserStream(const UserStream&) = delete;
+    UserStream& operator=(const UserStream&) = delete;
+    UserStream(UserStream&&) = delete;
+    UserStream& operator=(UserStream&&) = delete;
+
     // Set the dispatch mode. Must be called before start().
     // Default is DispatchMode::Inline (current behaviour).
     void set_dispatch_mode(DispatchMode mode);
