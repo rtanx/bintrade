@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bintrade/core/config.hpp>
+#include <bintrade/core/export.hpp>
 
 #include <functional>
 #include <memory>
@@ -12,7 +13,7 @@ namespace bintrade::ws {
 using MessageCallback = std::function<void(std::string_view message)>;
 using ErrorCallback = std::function<void(const std::error_code& ec, std::string_view message)>;
 
-class Client {
+class BINTRADE_API Client {
 public:
     explicit Client(WebSocketConfig config = WebSocketConfig{});
     virtual ~Client();

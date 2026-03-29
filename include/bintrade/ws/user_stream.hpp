@@ -2,6 +2,7 @@
 
 #include <bintrade/auth/credentials.hpp>
 #include <bintrade/core/config.hpp>
+#include <bintrade/core/export.hpp>
 #include <bintrade/models/account.hpp>
 #include <bintrade/models/order.hpp>
 #include <bintrade/ws/client.hpp>
@@ -25,7 +26,7 @@ namespace bintrade::ws {
 using AccountUpdateCallback = std::function<void(const models::AccountInfo& account)>;
 using OrderUpdateCallback = std::function<void(const models::Order& order)>;
 
-class UserStream : public Client {
+class BINTRADE_API UserStream : public Client {
 public:
     // rest_config is used for the listen-key lifecycle REST calls
     // (POST/PUT/DELETE /api/v3/userDataStream).

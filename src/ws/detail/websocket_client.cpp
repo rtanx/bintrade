@@ -18,10 +18,8 @@
 #include <random>
 #include <string>
 #include <thread>
-#ifdef __linux__
-#    include <pthread.h>
-#    include <sched.h>
-#endif
+
+#include "core/platform/thread_affinity.hpp"
 
 namespace bintrade::ws::detail {
 
@@ -337,14 +335,7 @@ void WebSocketClient::connect(const std::string& stream_path) {
     // Launch the I/O thread. It will call do_connect() which eventually
     // calls notify_connect() to unblock the wait below.
     impl_->io_thread = std::thread([this]() {
-#ifdef __linux__
-        if (impl_->config.io_core_id >= 0) {
-            cpu_set_t cpu_set;
-            CPU_ZERO(&cpu_set);
-            CPU_SET(static_cast<std::size_t>(impl_->config.io_core_id), &cpu_set);
-            pthread_setaffinity_np(pthread_self(), sizeof(cpu_set), &cpu_set);
-        }
-#endif
+        bintrade::platform::pin_thread_to_core(impl_->config.io_core_id);
         impl_->do_connect();
         impl_->ioc.run();
     });

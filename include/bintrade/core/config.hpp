@@ -28,7 +28,10 @@ struct WebSocketConfig {
     std::chrono::seconds reconnect_interval = std::chrono::seconds(5);
     int max_reconnect_attempts = 10;
     // CPU core to pin the I/O thread to (-1 = no pinning).
-    // Effective on Linux only; silently ignored on other platforms.
+    // Linux  : hard pinning via pthread_setaffinity_np.
+    // macOS  : advisory scheduling hint via THREAD_AFFINITY_POLICY; the
+    //          kernel may still schedule the thread on a different core.
+    // Windows: SetThreadAffinityMask; limited to cores 0-63.
     int io_core_id = -1;
 };
 

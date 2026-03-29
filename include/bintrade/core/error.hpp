@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bintrade/core/export.hpp>
+
 #include <exception>
 #include <string>
 #include <system_error>
@@ -24,16 +26,16 @@ enum class ErrorCode {
     UnknownError
 };
 
-class ErrorCategory : public std::error_category {
+class BINTRADE_API ErrorCategory : public std::error_category {
 public:
     [[nodiscard]] const char* name() const noexcept override;
     [[nodiscard]] std::string message(int ev) const override;
 };
 
-[[nodiscard]] const ErrorCategory& get_error_category();
-[[nodiscard]] std::error_code make_error_code(ErrorCode e);
+[[nodiscard]] BINTRADE_API const ErrorCategory& get_error_category();
+[[nodiscard]] BINTRADE_API std::error_code make_error_code(ErrorCode e);
 
-class Exception : public std::exception {
+class BINTRADE_API Exception : public std::exception {
 public:
     explicit Exception(std::string message);
     explicit Exception(std::error_code ec);
@@ -47,11 +49,11 @@ private:
     std::string message_;
 };
 
-class NetworkException : public Exception {
+class BINTRADE_API NetworkException : public Exception {
     using Exception::Exception;
 };
 
-class ApiException : public Exception {
+class BINTRADE_API ApiException : public Exception {
 public:
     ApiException(int http_code, std::string message);
     [[nodiscard]] int http_code() const noexcept;
@@ -60,11 +62,11 @@ private:
     int http_code_;
 };
 
-class AuthenticationException : public Exception {
+class BINTRADE_API AuthenticationException : public Exception {
     using Exception::Exception;
 };
 
-class ValidationException : public Exception {
+class BINTRADE_API ValidationException : public Exception {
     using Exception::Exception;
 };
 

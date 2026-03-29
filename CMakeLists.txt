@@ -48,6 +48,7 @@ set(BINTRADE_SOURCES
     src/core/error.cpp
     src/core/types.cpp
     src/core/config.cpp
+    src/core/platform/thread_affinity.cpp
     src/auth/credentials.cpp
     src/auth/signer.cpp
     src/models/common.cpp
@@ -74,6 +75,14 @@ else()
 endif()
 
 add_library(bintrade::bintrade ALIAS bintrade)
+
+# Export/import macros for shared library builds.
+if(BINTRADE_BUILD_SHARED)
+    target_compile_definitions(bintrade
+        PRIVATE BINTRADE_BUILDING_SHARED
+        PUBLIC  BINTRADE_SHARED
+    )
+endif()
 
 target_include_directories(bintrade
     PUBLIC
