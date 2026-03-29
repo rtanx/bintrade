@@ -16,6 +16,7 @@
         }
       }
     },
+
     {
       "name": "debug",
       "displayName": "Debug",
@@ -77,44 +78,179 @@
         "BINTRADE_BUILD_EXAMPLES": "OFF",
         "BINTRADE_BUILD_BENCHMARKS": "ON"
       }
+    },
+
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug (x64)",
+      "description": "Debug build for Linux x86-64 via vcpkg x64-linux triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/linux-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BINTRADE_BUILD_TESTS": "ON",
+        "BINTRADE_BUILD_EXAMPLES": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release (x64)",
+      "description": "Release build for Linux x86-64 via vcpkg x64-linux triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/linux-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BINTRADE_BUILD_TESTS": "OFF",
+        "BINTRADE_BUILD_EXAMPLES": "OFF",
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "linux-asan",
+      "displayName": "Linux Debug with ASan + UBSan (x64)",
+      "description": "Debug build with AddressSanitizer and UndefinedBehaviorSanitizer for CI",
+      "inherits": "linux-debug",
+      "binaryDir": "${sourceDir}/build/linux-asan",
+      "cacheVariables": {
+        "ENABLE_SANITIZER_ADDRESS": "ON",
+        "ENABLE_SANITIZER_UNDEFINED": "ON"
+      }
+    },
+
+    {
+      "name": "windows-debug",
+      "displayName": "Windows Debug (x64)",
+      "description": "Debug build for Windows x86-64 via vcpkg x64-windows-static triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/windows-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BINTRADE_BUILD_TESTS": "ON",
+        "BINTRADE_BUILD_EXAMPLES": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    },
+    {
+      "name": "windows-release",
+      "displayName": "Windows Release (x64)",
+      "description": "Release build for Windows x86-64 via vcpkg x64-windows-static triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/windows-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BINTRADE_BUILD_TESTS": "OFF",
+        "BINTRADE_BUILD_EXAMPLES": "OFF",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    },
+
+    {
+      "name": "macos-x64-debug",
+      "displayName": "macOS Debug (x86-64)",
+      "description": "Debug build for Intel macOS via vcpkg x64-osx community triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/macos-x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BINTRADE_BUILD_TESTS": "ON",
+        "BINTRADE_BUILD_EXAMPLES": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-osx"
+      }
+    },
+    {
+      "name": "macos-x64-release",
+      "displayName": "macOS Release (x86-64)",
+      "description": "Release build for Intel macOS via vcpkg x64-osx community triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/macos-x64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BINTRADE_BUILD_TESTS": "OFF",
+        "BINTRADE_BUILD_EXAMPLES": "OFF",
+        "VCPKG_TARGET_TRIPLET": "x64-osx"
+      }
+    },
+    {
+      "name": "macos-arm64-debug",
+      "displayName": "macOS Debug (Apple Silicon)",
+      "description": "Debug build for Apple Silicon via vcpkg arm64-osx community triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/macos-arm64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BINTRADE_BUILD_TESTS": "ON",
+        "BINTRADE_BUILD_EXAMPLES": "ON",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
+    },
+    {
+      "name": "macos-arm64-release",
+      "displayName": "macOS Release (Apple Silicon)",
+      "description": "Release build for Apple Silicon via vcpkg arm64-osx community triplet",
+      "inherits": "vcpkg-base",
+      "binaryDir": "${sourceDir}/build/macos-arm64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BINTRADE_BUILD_TESTS": "OFF",
+        "BINTRADE_BUILD_EXAMPLES": "OFF",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
     }
   ],
   "buildPresets": [
-    {
-      "name": "debug",
-      "configurePreset": "debug"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    },
-    {
-      "name": "relwithdebinfo",
-      "configurePreset": "relwithdebinfo"
-    },
-    {
-      "name": "coverage",
-      "configurePreset": "coverage"
-    },
-    {
-      "name": "bench",
-      "configurePreset": "bench"
-    }
+    {"name": "debug",               "configurePreset": "debug"},
+    {"name": "release",             "configurePreset": "release"},
+    {"name": "relwithdebinfo",      "configurePreset": "relwithdebinfo"},
+    {"name": "coverage",            "configurePreset": "coverage"},
+    {"name": "bench",               "configurePreset": "bench"},
+    {"name": "linux-debug",         "configurePreset": "linux-debug"},
+    {"name": "linux-release",       "configurePreset": "linux-release"},
+    {"name": "linux-asan",          "configurePreset": "linux-asan"},
+    {"name": "windows-debug",       "configurePreset": "windows-debug",   "configuration": "Debug"},
+    {"name": "windows-release",     "configurePreset": "windows-release", "configuration": "Release"},
+    {"name": "macos-x64-debug",     "configurePreset": "macos-x64-debug"},
+    {"name": "macos-x64-release",   "configurePreset": "macos-x64-release"},
+    {"name": "macos-arm64-debug",   "configurePreset": "macos-arm64-debug"},
+    {"name": "macos-arm64-release", "configurePreset": "macos-arm64-release"}
   ],
   "testPresets": [
     {
       "name": "debug",
       "configurePreset": "debug",
-      "output": {
-        "outputOnFailure": true
-      }
+      "output": {"outputOnFailure": true}
     },
     {
       "name": "coverage",
       "configurePreset": "coverage",
-      "output": {
-        "outputOnFailure": true
-      }
+      "output": {"outputOnFailure": true}
+    },
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug",
+      "output": {"outputOnFailure": true}
+    },
+    {
+      "name": "linux-asan",
+      "configurePreset": "linux-asan",
+      "output": {"outputOnFailure": true}
+    },
+    {
+      "name": "windows-debug",
+      "configurePreset": "windows-debug",
+      "output": {"outputOnFailure": true}
+    },
+    {
+      "name": "macos-x64-debug",
+      "configurePreset": "macos-x64-debug",
+      "output": {"outputOnFailure": true}
+    },
+    {
+      "name": "macos-arm64-debug",
+      "configurePreset": "macos-arm64-debug",
+      "output": {"outputOnFailure": true}
     }
   ]
 }

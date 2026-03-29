@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bintrade/core/config.hpp>
+#include <bintrade/core/export.hpp>
 #include <bintrade/core/types.hpp>
 #include <bintrade/models/market_data.hpp>
 #include <bintrade/models/trade.hpp>
@@ -16,7 +17,7 @@ using KlineCallback = std::function<void(const models::Kline& kline)>;
 using TickerCallback = std::function<void(const models::Ticker& ticker)>;
 using OrderBookCallback = std::function<void(const models::OrderBook& orderbook)>;
 
-class MarketStream : public Client {
+class BINTRADE_API MarketStream : public Client {
 public:
     explicit MarketStream(WebSocketConfig config = WebSocketConfig{});
     ~MarketStream() override;

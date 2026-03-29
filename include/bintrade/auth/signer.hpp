@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bintrade/core/export.hpp>
+
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -8,7 +10,7 @@ namespace bintrade {
 
 class Credentials;
 
-class Signer {
+class BINTRADE_API Signer {
 public:
     explicit Signer(const Credentials& credentials);
 

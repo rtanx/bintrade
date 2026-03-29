@@ -2,6 +2,7 @@
 
 #include <bintrade/auth/credentials.hpp>
 #include <bintrade/core/config.hpp>
+#include <bintrade/core/export.hpp>
 #include <bintrade/core/types.hpp>
 
 #include <boost/asio/awaitable.hpp>
@@ -18,7 +19,7 @@ namespace detail {
 class HttpTransport;
 }  // namespace detail
 
-class Client {
+class BINTRADE_API Client {
 public:
     explicit Client(RestConfig config = RestConfig{});
     Client(RestConfig config, Credentials credentials);

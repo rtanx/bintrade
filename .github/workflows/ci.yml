@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+# Cancel in-flight runs for the same ref so pushes to a branch don't stack up.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Main build + test matrix (3 platforms)
+  # ---------------------------------------------------------------------------
+  build:
+    name: "Build & Test (${{ matrix.os }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            preset: linux-debug
+            cc: gcc
+            cxx: g++
+          - os: macos-latest
+            preset: macos-arm64-debug
+            cc: clang
+            cxx: clang++
+          - os: windows-latest
+            preset: windows-debug
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Set up MSVC environment on Windows.
+      - name: Setup MSVC dev environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # Bootstrap vcpkg. All platforms use the same clone + bootstrap approach
+      # so the workflow is uniform and the version is pinned to HEAD.
+      - name: Bootstrap vcpkg
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg "${{ runner.temp }}/vcpkg" --depth 1
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            "${{ runner.temp }}/vcpkg/bootstrap-vcpkg.bat" -disableMetrics
+          else
+            "${{ runner.temp }}/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          fi
+
+      # Cache compiled vcpkg binary packages. The key includes the vcpkg.json
+      # hash so the cache is invalidated whenever dependencies change.
+      - name: Cache vcpkg binary archives
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-archives
+          key: vcpkg-${{ hashFiles('vcpkg.json') }}-${{ runner.os }}-${{ matrix.preset }}
+          restore-keys: |
+            vcpkg-${{ hashFiles('vcpkg.json') }}-${{ runner.os }}-
+
+      - name: Configure
+        env:
+          VCPKG_ROOT: "${{ runner.temp }}/vcpkg"
+          VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg-archives,readwrite"
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build build/${{ matrix.preset }} --parallel
+
+      - name: Test
+        run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # AddressSanitizer + UndefinedBehaviorSanitizer (Linux only)
+  # ---------------------------------------------------------------------------
+  asan:
+    name: "ASan + UBSan (Ubuntu)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bootstrap vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg "${{ runner.temp }}/vcpkg" --depth 1
+          "${{ runner.temp }}/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+
+      - name: Cache vcpkg binary archives
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-archives
+          key: vcpkg-${{ hashFiles('vcpkg.json') }}-ubuntu-asan
+          restore-keys: |
+            vcpkg-${{ hashFiles('vcpkg.json') }}-ubuntu-
+
+      - name: Configure (ASan + UBSan)
+        env:
+          VCPKG_ROOT: "${{ runner.temp }}/vcpkg"
+          VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg-archives,readwrite"
+        run: cmake --preset linux-asan
+
+      - name: Build
+        run: cmake --build build/linux-asan --parallel
+
+      - name: Test
+        env:
+          # halt_on_error: stop on the first violation so the failure is obvious.
+          # detect_leaks: disabled because system/third-party library leaks would
+          # produce false positives in CI.
+          ASAN_OPTIONS: "halt_on_error=1:detect_leaks=0"
+          UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1"
+        run: ctest --test-dir build/linux-asan --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # clang-tidy static analysis (Linux only -- run-clang-tidy availability)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: "clang-tidy (Ubuntu)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-tidy
+        run: sudo apt-get install -y clang-tidy
+
+      - name: Bootstrap vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg "${{ runner.temp }}/vcpkg" --depth 1
+          "${{ runner.temp }}/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+
+      - name: Cache vcpkg binary archives
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg-archives
+          key: vcpkg-${{ hashFiles('vcpkg.json') }}-ubuntu-lint
+          restore-keys: |
+            vcpkg-${{ hashFiles('vcpkg.json') }}-ubuntu-
+
+      - name: Configure (with compile_commands.json)
+        env:
+          VCPKG_ROOT: "${{ runner.temp }}/vcpkg"
+          VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg-archives,readwrite"
+        run: cmake --preset linux-debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Lint
+        run: |
+          run-clang-tidy -p build/linux-debug -quiet \
+            'include/.*\.(hpp|cpp)$' \
+            'src/.*\.(hpp|cpp)$'

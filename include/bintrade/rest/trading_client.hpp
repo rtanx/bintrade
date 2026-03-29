@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bintrade/core/export.hpp>
 #include <bintrade/models/order.hpp>
 #include <bintrade/rest/client.hpp>
 
@@ -8,7 +9,7 @@
 
 namespace bintrade::rest {
 
-class TradingClient : public Client {
+class BINTRADE_API TradingClient : public Client {
 public:
     using Client::Client;
 

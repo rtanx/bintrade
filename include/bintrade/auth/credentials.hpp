@@ -1,12 +1,14 @@
 #pragma once
 
+#include <bintrade/core/export.hpp>
+
 #include <memory>
 #include <string>
 #include <string_view>
 
 namespace bintrade {
 
-class Credentials {
+class BINTRADE_API Credentials {
 public:
     Credentials();
     Credentials(std::string api_key, std::string api_secret);
