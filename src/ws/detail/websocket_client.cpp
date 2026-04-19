@@ -1,6 +1,9 @@
 #include "websocket_client.hpp"
 
+#include "core/platform/thread_affinity.hpp"
+
 #include <bintrade/core/error.hpp>
+#include <bintrade/core/logger.hpp>
 
 #include <atomic>
 #include <boost/asio/connect.hpp>
@@ -18,8 +21,6 @@
 #include <random>
 #include <string>
 #include <thread>
-
-#include "core/platform/thread_affinity.hpp"
 
 namespace bintrade::ws::detail {
 
@@ -155,9 +156,11 @@ struct WebSocketClient::Impl {
 
             ws->handshake(parsed_url.host, current_path);
             connected.store(true, std::memory_order_release);
+            bintrade::logger()->info("WS connected to {}:{}{}", parsed_url.host, parsed_url.port, current_path);
 
         } catch (const std::exception& e) {
             connected.store(false, std::memory_order_release);
+            bintrade::logger()->warn("WS connect failed: {}", e.what());
             notify_connect(e.what());
             return;
         }
@@ -187,6 +190,7 @@ struct WebSocketClient::Impl {
         }
         if (ec) {
             connected.store(false, std::memory_order_release);
+            bintrade::logger()->warn("WS read error: {}", ec.message());
             if (on_error) {
                 on_error("Read error: " + ec.message());
             }
@@ -199,6 +203,7 @@ struct WebSocketClient::Impl {
         if (ws->got_text()) {
             auto msg = beast::buffers_to_string(read_buffer.data());
             read_buffer.consume(read_buffer.size());
+            bintrade::logger()->trace("WS recv {} bytes", msg.size());
             if (on_message) {
                 on_message(msg);
             }
@@ -225,6 +230,7 @@ struct WebSocketClient::Impl {
                 ws->ping({}, ping_ec);
                 if (ping_ec) {
                     connected.store(false, std::memory_order_release);
+                    bintrade::logger()->warn("WS ping failed: {}", ping_ec.message());
                     if (on_error) {
                         on_error("Ping failed: " + ping_ec.message());
                     }
@@ -243,6 +249,7 @@ struct WebSocketClient::Impl {
             return;
         }
         if (attempt >= config.max_reconnect_attempts) {
+            bintrade::logger()->error("WS max reconnect attempts ({}) reached -- giving up", config.max_reconnect_attempts);
             if (on_error) {
                 on_error("Max reconnect attempts reached -- giving up");
             }
@@ -256,6 +263,7 @@ struct WebSocketClient::Impl {
             if (ec || should_stop.load(std::memory_order_acquire)) {
                 return;
             }
+            bintrade::logger()->info("WS reconnecting (attempt {}/{})", attempt + 1, config.max_reconnect_attempts);
             if (on_error) {
                 on_error("Reconnecting (attempt " + std::to_string(attempt + 1) + ")...");
             }
@@ -284,12 +292,14 @@ struct WebSocketClient::Impl {
 
                 ws->handshake(parsed_url.host, current_path);
                 connected.store(true, std::memory_order_release);
+                bintrade::logger()->info("WS reconnected to {}:{}{}", parsed_url.host, parsed_url.port, current_path);
                 read_buffer.clear();
                 do_read();
                 do_ping_timer();
 
             } catch (const std::exception& e) {
                 connected.store(false, std::memory_order_release);
+                bintrade::logger()->warn("WS reconnect attempt {} failed: {}", attempt + 1, e.what());
                 if (on_error) {
                     on_error(std::string("Reconnect attempt failed: ") + e.what());
                 }
@@ -359,6 +369,7 @@ void WebSocketClient::disconnect() {
     if (!impl_) {
         return;
     }
+    bintrade::logger()->info("WS disconnecting");
     impl_->should_stop.store(true, std::memory_order_release);
     impl_->connected.store(false, std::memory_order_release);
 

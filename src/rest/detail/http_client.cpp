@@ -1,6 +1,7 @@
 #include "http_client.hpp"
 
 #include <bintrade/core/error.hpp>
+#include <bintrade/core/logger.hpp>
 
 #include <algorithm>
 #include <boost/asio/co_spawn.hpp>
@@ -17,6 +18,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <openssl/ssl.h>
@@ -333,6 +335,8 @@ struct HttpClient::Impl {
     /// / 5xx) is NOT retried -- only transport-level failures are.
     asio::awaitable<HttpResponse> execute(http::verb method, std::string target, std::string body, HttpTransport::Params extra_headers) {
         constexpr int max_attempts = 2;
+        auto start = std::chrono::steady_clock::now();
+        auto method_str = std::string(http::to_string(method));
 
         for (int attempt = 0; attempt < max_attempts; ++attempt) {
             PooledConnection* conn = co_await acquire_connection();
@@ -344,17 +348,31 @@ struct HttpClient::Impl {
                 // HTTP/1.1: res.keep_alive() checks version + Connection header.
                 bool keep = res_keep_alive(resp);
                 release_connection(conn, keep);
+
+                auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+                if (resp.status_code >= 400) {
+                    bintrade::logger()->warn("REST {} {} -> {} ({} ms)", method_str, target, resp.status_code, elapsed_ms);
+                } else {
+                    bintrade::logger()->debug("REST {} {} -> {} ({} ms)", method_str, target, resp.status_code, elapsed_ms);
+                }
+
                 co_return resp;
             } catch (const beast::system_error& ec) {
                 // Connection reset / EOF on a reused slot -- discard and retry.
                 release_connection(conn, false);
                 // If this was a fresh connection (not reused), the error is genuine.
                 if (!was_preconnected || attempt == max_attempts - 1) {
+                    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+                    bintrade::logger()->error("REST {} {} transport error: {} ({} ms, attempt {}/{})", method_str, target, ec.what(), elapsed_ms,
+                                              attempt + 1, max_attempts);
                     throw NetworkException(ec.what());
                 }
+                bintrade::logger()->warn("REST {} {} stale connection, retrying (attempt {}/{})", method_str, target, attempt + 1, max_attempts);
                 // else: loop and retry with a fresh connection
             } catch (const std::exception& e) {
                 release_connection(conn, false);
+                auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+                bintrade::logger()->error("REST {} {} error: {} ({} ms)", method_str, target, e.what(), elapsed_ms);
                 throw NetworkException(e.what());
             }
         }

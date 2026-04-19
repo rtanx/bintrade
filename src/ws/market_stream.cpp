@@ -1,6 +1,7 @@
 #include "detail/ws_parse.hpp"
 
 #include <bintrade/core/error.hpp>
+#include <bintrade/core/logger.hpp>
 #include <bintrade/core/spsc_queue.hpp>
 #include <bintrade/ws/market_stream.hpp>
 
@@ -19,7 +20,7 @@ namespace bintrade::ws {
 // QueueState -- SPSC queue + consumer thread for DispatchMode::Queued.
 // -----------------------------------------------------------------------
 struct MarketStream::QueueState {
-    static constexpr std::size_t k_queue_capacity = 4096;
+    static constexpr std::size_t k_queue_capacity = 4'096;
 
     SpscQueue<std::string, k_queue_capacity> queue;
     std::thread consumer_thread;
@@ -56,9 +57,7 @@ void MarketStream::install_dispatch(std::function<void(std::string_view)> dispat
         if (!queue_state_) {
             queue_state_ = std::make_unique<QueueState>();
         }
-        set_message_callback([state = queue_state_.get()](std::string_view msg) {
-            (void)state->queue.try_push(std::string(msg));
-        });
+        set_message_callback([state = queue_state_.get()](std::string_view msg) { (void)state->queue.try_push(std::string(msg)); });
         start_consumer(std::move(dispatch_fn));
     } else {
         set_message_callback(std::move(dispatch_fn));
@@ -116,6 +115,7 @@ std::string lower(std::string s) {
 void MarketStream::subscribe_trades(const Symbol& symbol, const TradeCallback& callback) {
     subscribed_ = true;
     auto stream_name = lower(symbol) + "@trade";
+    bintrade::logger()->info("MarketStream subscribing to {}", stream_name);
 
     auto dispatch_fn = [callback](std::string_view msg) {
         try {
@@ -123,7 +123,8 @@ void MarketStream::subscribe_trades(const Symbol& symbol, const TradeCallback& c
             if (j.value("e", "") == "trade") {
                 callback(detail::parse_trade_stream(j));
             }
-        } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
+        } catch (const std::exception& ex) {
+            bintrade::logger()->warn("MarketStream dispatch error: {}", ex.what());
         }
     };
 
@@ -134,6 +135,7 @@ void MarketStream::subscribe_trades(const Symbol& symbol, const TradeCallback& c
 void MarketStream::subscribe_klines(const Symbol& symbol, std::string_view interval, const KlineCallback& callback) {
     subscribed_ = true;
     auto stream_name = lower(symbol) + "@kline_" + std::string(interval);
+    bintrade::logger()->info("MarketStream subscribing to {}", stream_name);
 
     auto dispatch_fn = [callback](std::string_view msg) {
         try {
@@ -141,7 +143,8 @@ void MarketStream::subscribe_klines(const Symbol& symbol, std::string_view inter
             if (j.value("e", "") == "kline") {
                 callback(detail::parse_kline_stream(j));
             }
-        } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
+        } catch (const std::exception& ex) {
+            bintrade::logger()->warn("MarketStream dispatch error: {}", ex.what());
         }
     };
 
@@ -152,6 +155,7 @@ void MarketStream::subscribe_klines(const Symbol& symbol, std::string_view inter
 void MarketStream::subscribe_ticker(const Symbol& symbol, const TickerCallback& callback) {
     subscribed_ = true;
     auto stream_name = lower(symbol) + "@ticker";
+    bintrade::logger()->info("MarketStream subscribing to {}", stream_name);
 
     auto dispatch_fn = [callback](std::string_view msg) {
         try {
@@ -159,7 +163,8 @@ void MarketStream::subscribe_ticker(const Symbol& symbol, const TickerCallback& 
             if (j.value("e", "") == "24hrTicker") {
                 callback(detail::parse_ticker_stream(j));
             }
-        } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
+        } catch (const std::exception& ex) {
+            bintrade::logger()->warn("MarketStream dispatch error: {}", ex.what());
         }
     };
 
@@ -170,6 +175,7 @@ void MarketStream::subscribe_ticker(const Symbol& symbol, const TickerCallback& 
 void MarketStream::subscribe_depth(const Symbol& symbol, const OrderBookCallback& callback) {
     subscribed_ = true;
     auto stream_name = lower(symbol) + "@depth";
+    bintrade::logger()->info("MarketStream subscribing to {}", stream_name);
 
     auto dispatch_fn = [callback](std::string_view msg) {
         try {
@@ -177,7 +183,8 @@ void MarketStream::subscribe_depth(const Symbol& symbol, const OrderBookCallback
             if (j.value("e", "") == "depthUpdate") {
                 callback(detail::parse_depth_stream(j));
             }
-        } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
+        } catch (const std::exception& ex) {
+            bintrade::logger()->warn("MarketStream dispatch error: {}", ex.what());
         }
     };
 

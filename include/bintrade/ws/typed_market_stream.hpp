@@ -36,8 +36,7 @@ namespace bintrade::ws {
 template <typename Handler>
 class TypedMarketStream : public Client {
 public:
-    explicit TypedMarketStream(Handler& handler, WebSocketConfig config = WebSocketConfig{})
-        : Client(std::move(config)), handler_(handler) {}
+    explicit TypedMarketStream(Handler& handler, WebSocketConfig config = WebSocketConfig{}) : Client(std::move(config)), handler_(handler) {}
 
     void subscribe_trades(const Symbol& symbol) {
         auto stream_name = to_lower(symbol) + "@trade";

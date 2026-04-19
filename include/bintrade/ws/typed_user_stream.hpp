@@ -32,8 +32,7 @@ namespace bintrade::ws {
 template <typename Handler>
 class TypedUserStream : public UserStream {
 public:
-    TypedUserStream(Handler& handler, Credentials credentials, RestConfig rest_config = RestConfig{},
-                    WebSocketConfig ws_config = WebSocketConfig{})
+    TypedUserStream(Handler& handler, Credentials credentials, RestConfig rest_config = RestConfig{}, WebSocketConfig ws_config = WebSocketConfig{})
         : UserStream(std::move(credentials), std::move(rest_config), std::move(ws_config)), handler_(handler) {}
 
 protected:

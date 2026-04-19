@@ -25,7 +25,7 @@ TEST(ThreadAffinityTest, CoreZeroDoesNotThrow) {
 // on Windows false (core_id >= 64 guard).
 TEST(ThreadAffinityTest, InvalidCoreIdDoesNotCrash) {
     bool result = false;
-    EXPECT_NO_THROW(result = bintrade::platform::pin_thread_to_core(9999));
+    EXPECT_NO_THROW(result = bintrade::platform::pin_thread_to_core(9'999));
     (void)result;
 }
 
