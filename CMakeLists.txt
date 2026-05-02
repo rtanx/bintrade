@@ -105,6 +105,20 @@ target_link_libraries(bintrade
 )
 
 set_project_warnings(bintrade)
+
+# Boost.Asio and Beast require this on Windows; define it here so the value is
+# explicit rather than guessed by the headers. 0x0A00 = Windows 10. PUBLIC so
+# consumers that include our headers also see the same definition.
+if(WIN32)
+    target_compile_definitions(bintrade PUBLIC _WIN32_WINNT=0x0A00)
+endif()
+
+# http_client.cpp accumulates enough template instantiations to exceed the
+# default COFF section-count limit (65535) under MSVC.
+if(MSVC)
+    target_compile_options(bintrade PRIVATE /bigobj)
+endif()
+
 enable_sanitizers(bintrade)
 enable_coverage(bintrade)
 
