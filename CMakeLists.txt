@@ -10,6 +10,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Match vcpkg's x64-windows-static triplet which links the static CRT (/MT[d]).
+# Without this, MSVC defaults to the dynamic CRT (/MD[d]) and the linker reports
+# RuntimeLibrary mismatch errors against vcpkg-built gtest/gmock.
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Custom CMake modules
@@ -105,6 +112,20 @@ target_link_libraries(bintrade
 )
 
 set_project_warnings(bintrade)
+
+# Boost.Asio and Beast require this on Windows; define it here so the value is
+# explicit rather than guessed by the headers. 0x0A00 = Windows 10. PUBLIC so
+# consumers that include our headers also see the same definition.
+if(WIN32)
+    target_compile_definitions(bintrade PUBLIC _WIN32_WINNT=0x0A00)
+endif()
+
+# http_client.cpp accumulates enough template instantiations to exceed the
+# default COFF section-count limit (65535) under MSVC.
+if(MSVC)
+    target_compile_options(bintrade PRIVATE /bigobj)
+endif()
+
 enable_sanitizers(bintrade)
 enable_coverage(bintrade)
 

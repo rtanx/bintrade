@@ -8,20 +8,18 @@
 
 #include <atomic>
 #include <cstddef>
-#include <new>
 #include <optional>
 #include <type_traits>
 
 namespace bintrade {
 
-// Portable cache-line size constant. std::hardware_destructive_interference_size
-// is not reliably constexpr across all implementations; fall back to 64 bytes.
-inline constexpr std::size_t k_cache_line_size =
-#ifdef __cpp_lib_hardware_interference_size
-    std::hardware_destructive_interference_size;
-#else
-    64;
-#endif
+// Hardcoded to 64 bytes (L1 line size on x86_64 and ARM). We deliberately do
+// not use std::hardware_destructive_interference_size because GCC warns
+// (-Winterference-size) that its value can shift with -mtune flags and is
+// unsafe across translation units that may be compiled differently. Boost
+// Lockfree, Folly, and most HFT libraries hardcode the same value for the
+// same reason.
+inline constexpr std::size_t k_cache_line_size = 64;
 
 /// Lock-free bounded SPSC (single-producer single-consumer) ring buffer.
 ///

@@ -3,6 +3,7 @@
 #ifdef __linux__
 #    include <pthread.h>
 #    include <sched.h>
+#    include <cstddef>
 #elif defined(__APPLE__)
 #    include <mach/mach.h>
 #    include <mach/thread_policy.h>

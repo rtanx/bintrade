@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cctype>
 #include <string>
 #include <unordered_map>
