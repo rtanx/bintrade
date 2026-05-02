@@ -55,6 +55,7 @@ set(BINTRADE_SOURCES
     src/core/error.cpp
     src/core/types.cpp
     src/core/config.cpp
+    src/core/logger.cpp
     src/core/platform/thread_affinity.cpp
     src/auth/credentials.cpp
     src/auth/signer.cpp
@@ -103,12 +104,12 @@ target_include_directories(bintrade
 target_link_libraries(bintrade
     PUBLIC
         nlohmann_json::nlohmann_json
+        spdlog::spdlog
+        fmt::fmt
     PRIVATE
         Boost::system
         OpenSSL::SSL
         OpenSSL::Crypto
-        spdlog::spdlog
-        fmt::fmt
 )
 
 set_project_warnings(bintrade)

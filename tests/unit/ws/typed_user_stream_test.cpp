@@ -67,8 +67,7 @@ struct OrderOnlyHandler {
 template <typename Handler>
 class TestableTypedUserStream : public TypedUserStream<Handler> {
 public:
-    TestableTypedUserStream(Handler& handler, Credentials credentials)
-        : TypedUserStream<Handler>(handler, std::move(credentials)) {}
+    TestableTypedUserStream(Handler& handler, Credentials credentials) : TypedUserStream<Handler>(handler, std::move(credentials)) {}
 
     void test_dispatch(std::string_view msg) { this->dispatch_message(msg); }
 };
@@ -85,7 +84,7 @@ TEST(TypedUserStreamTest, DispatchesOrderUpdate) {
 
     ASSERT_EQ(h.order_count.load(), 1);
     EXPECT_EQ(h.last_order.symbol, "BTCUSDT");
-    EXPECT_EQ(h.last_order.order_id, 123456789UL);
+    EXPECT_EQ(h.last_order.order_id, 123'456'789UL);
 }
 
 // ---------------------------------------------------------------------------

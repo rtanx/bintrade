@@ -3,6 +3,7 @@
 // Core
 #include <bintrade/core/config.hpp>
 #include <bintrade/core/error.hpp>
+#include <bintrade/core/logger.hpp>
 #include <bintrade/core/spsc_queue.hpp>
 #include <bintrade/core/types.hpp>
 

@@ -1,4 +1,5 @@
 #include <bintrade/core/error.hpp>
+#include <bintrade/core/logger.hpp>
 #include <bintrade/core/spsc_queue.hpp>
 #include <bintrade/ws/user_stream.hpp>
 
@@ -164,8 +165,8 @@ void UserStream::do_dispatch(std::string_view raw_json) {
         }
         // "balanceUpdate" and "listStatus" events are intentionally not
         // dispatched at this stage; they can be added as needed.
-    } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
-        // Non-fatal: discard unparseable messages.
+    } catch (const std::exception& ex) {
+        bintrade::logger()->warn("UserStream dispatch error: {}", ex.what());
     }
 }
 
@@ -183,6 +184,7 @@ void UserStream::start() {
     if (listen_key_.empty()) {
         throw ApiException(0, "Empty listenKey returned by Binance");
     }
+    bintrade::logger()->info("UserStream listen key obtained (length={})", listen_key_.size());
 
     if (dispatch_mode_ == DispatchMode::Queued) {
         if (!queue_state_) {
@@ -219,9 +221,11 @@ void UserStream::keep_alive() {
         return;
     }
     renew_listen_key(listen_key_);
+    bintrade::logger()->debug("UserStream renewed listen key");
 }
 
 void UserStream::stop() {
+    bintrade::logger()->info("UserStream stopping");
     // Stop the consumer thread before keep-alive to prevent races.
     stop_consumer();
 
@@ -238,8 +242,8 @@ void UserStream::stop() {
     if (!listen_key_.empty()) {
         try {
             delete_listen_key(listen_key_);
-        } catch (const std::exception& /*e*/) {  // NOLINT(bugprone-empty-catch)
-            // Best-effort: disconnect regardless.
+        } catch (const std::exception& ex) {
+            bintrade::logger()->warn("UserStream failed to delete listen key: {}", ex.what());
         }
         listen_key_.clear();
     }

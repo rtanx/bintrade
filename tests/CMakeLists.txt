@@ -8,6 +8,7 @@ add_executable(bintrade_tests
     unit/core/spsc_queue_test.cpp
     unit/core/thread_affinity_test.cpp
     unit/core/platform_clock_test.cpp
+    unit/core/logger_test.cpp
     # auth
     unit/auth/signer_test.cpp
     unit/auth/credentials_test.cpp

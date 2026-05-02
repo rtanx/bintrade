@@ -138,7 +138,7 @@ TEST(SpscQueueTest, StringElements) {
 // -----------------------------------------------------------------------
 
 TEST(SpscQueueTest, ConcurrentProducerConsumer) {
-    constexpr std::size_t cap = 1024;
+    constexpr std::size_t cap = 1'024;
     constexpr int num_items = 100'000;
 
     bintrade::SpscQueue<int, cap> q;
@@ -183,8 +183,7 @@ TEST(SpscQueueTest, ConcurrentProducerConsumer) {
     // Verify completeness and order.
     ASSERT_EQ(static_cast<int>(received.size()), num_items);
     for (int i = 0; i < num_items; ++i) {
-        EXPECT_EQ(received[static_cast<std::size_t>(i)], i)
-            << "Out-of-order at index " << i;
+        EXPECT_EQ(received[static_cast<std::size_t>(i)], i) << "Out-of-order at index " << i;
     }
 }
 
