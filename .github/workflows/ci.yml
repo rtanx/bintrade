@@ -37,6 +37,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.28.0"
+
       # Set up MSVC environment on Windows.
       - name: Setup MSVC dev environment
         if: runner.os == 'Windows'
@@ -88,6 +93,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.28.0"
+
       - name: Bootstrap vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg "${{ runner.temp }}/vcpkg" --depth 1
@@ -128,6 +138,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.28.0"
 
       - name: Install clang-tidy
         run: sudo apt-get install -y clang-tidy
