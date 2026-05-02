@@ -35,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -62,7 +62,7 @@ jobs:
       # Cache compiled vcpkg binary packages. The key includes the vcpkg.json
       # hash so the cache is invalidated whenever dependencies change.
       - name: Cache vcpkg binary archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ runner.temp }}/vcpkg-archives
           key: vcpkg-${{ hashFiles('vcpkg.json') }}-${{ runner.os }}-${{ matrix.preset }}
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -104,7 +104,7 @@ jobs:
           "${{ runner.temp }}/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
 
       - name: Cache vcpkg binary archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ runner.temp }}/vcpkg-archives
           key: vcpkg-${{ hashFiles('vcpkg.json') }}-ubuntu-asan
@@ -115,10 +115,10 @@ jobs:
         env:
           VCPKG_ROOT: "${{ runner.temp }}/vcpkg"
           VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg-archives,readwrite"
-        run: cmake --preset linux-asan 2>&1 | tee configure.log
+        run: cmake --preset linux-asan
 
       - name: Build
-        run: cmake --build build/linux-asan --parallel 2>&1 | tee build.log
+        run: cmake --build build/linux-asan --parallel
 
       - name: Test
         env:
@@ -127,20 +127,14 @@ jobs:
           # produce false positives in CI.
           ASAN_OPTIONS: "halt_on_error=1:detect_leaks=0"
           UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1"
-        run: ctest --test-dir build/linux-asan --output-on-failure 2>&1 | tee test.log
+        run: ctest --test-dir build/linux-asan --output-on-failure
 
-      # Upload full logs on failure so the truncated GitHub UI output can be
-      # inspected. ctest's per-test log lives under Testing/Temporary/.
-      - name: Upload ASan logs
+      - name: Upload ctest log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: asan-logs
-          path: |
-            configure.log
-            build.log
-            test.log
-            build/linux-asan/Testing/Temporary/LastTest.log
+          name: asan-ctest-log
+          path: build/linux-asan/Testing/Temporary/LastTest.log
           if-no-files-found: ignore
           retention-days: 14
 
@@ -152,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -160,7 +154,9 @@ jobs:
           cmakeVersion: "~3.28.0"
 
       - name: Install clang-tidy
-        run: sudo apt-get install -y clang-tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy
 
       - name: Bootstrap vcpkg
         run: |
@@ -168,7 +164,7 @@ jobs:
           "${{ runner.temp }}/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
 
       - name: Cache vcpkg binary archives
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ runner.temp }}/vcpkg-archives
           key: vcpkg-${{ hashFiles('vcpkg.json') }}-ubuntu-lint
