@@ -115,10 +115,10 @@ jobs:
         env:
           VCPKG_ROOT: "${{ runner.temp }}/vcpkg"
           VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg-archives,readwrite"
-        run: cmake --preset linux-asan
+        run: cmake --preset linux-asan 2>&1 | tee configure.log
 
       - name: Build
-        run: cmake --build build/linux-asan --parallel
+        run: cmake --build build/linux-asan --parallel 2>&1 | tee build.log
 
       - name: Test
         env:
@@ -127,7 +127,22 @@ jobs:
           # produce false positives in CI.
           ASAN_OPTIONS: "halt_on_error=1:detect_leaks=0"
           UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1"
-        run: ctest --test-dir build/linux-asan --output-on-failure
+        run: ctest --test-dir build/linux-asan --output-on-failure 2>&1 | tee test.log
+
+      # Upload full logs on failure so the truncated GitHub UI output can be
+      # inspected. ctest's per-test log lives under Testing/Temporary/.
+      - name: Upload ASan logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asan-logs
+          path: |
+            configure.log
+            build.log
+            test.log
+            build/linux-asan/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+          retention-days: 14
 
   # ---------------------------------------------------------------------------
   # clang-tidy static analysis (Linux only -- run-clang-tidy availability)

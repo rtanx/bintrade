@@ -37,7 +37,7 @@ struct Client::Impl {
     void update_rate_limits(const detail::HttpResponse& resp) noexcept {
         auto try_parse = [](const std::string& v) noexcept -> int32_t {
             try {
-                return static_cast<int32_t>(std::stoi(v));
+                return std::stoi(v);
             } catch (const std::exception&) {
                 return -1;
             }

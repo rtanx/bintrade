@@ -10,6 +10,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Match vcpkg's x64-windows-static triplet which links the static CRT (/MT[d]).
+# Without this, MSVC defaults to the dynamic CRT (/MD[d]) and the linker reports
+# RuntimeLibrary mismatch errors against vcpkg-built gtest/gmock.
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Custom CMake modules
