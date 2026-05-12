@@ -1,9 +1,9 @@
 #include "thread_affinity.hpp"
 
 #ifdef __linux__
+#    include <cstddef>
 #    include <pthread.h>
 #    include <sched.h>
-#    include <cstddef>
 #elif defined(__APPLE__)
 #    include <mach/mach.h>
 #    include <mach/thread_policy.h>

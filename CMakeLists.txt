@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(bintrade
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Binance Trading API Wrapper Library"
     LANGUAGES CXX
 )
@@ -32,12 +32,13 @@ option(BINTRADE_BUILD_TESTS "Build tests" ON)
 option(BINTRADE_BUILD_EXAMPLES "Build examples" ON)
 option(BINTRADE_BUILD_SHARED "Build shared library" OFF)
 option(BINTRADE_BUILD_BENCHMARKS "Build benchmarks (use Release builds for meaningful results)" OFF)
+option(BINTRADE_ENABLE_INTEGRATION_TESTS "Build live integration tests against Binance testnet (network required)" OFF)
 
 # Ensure imported targets use -isystem (suppresses warnings in third-party headers)
 set(CMAKE_NO_SYSTEM_FROM_IMPORTED OFF)
 
 # Dependencies (via vcpkg)
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost CONFIG REQUIRED COMPONENTS system asio)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
@@ -106,8 +107,13 @@ target_link_libraries(bintrade
         nlohmann_json::nlohmann_json
         spdlog::spdlog
         fmt::fmt
-    PRIVATE
+        # Boost.Asio types (awaitable<T>, executor) appear in our public
+        # headers, so consumers must see Boost.Asio's include path.
+        # Boost::asio is header-only; Boost::system carries the linked
+        # error_category symbols used at TLS handshake / endpoint resolve.
+        Boost::asio
         Boost::system
+    PRIVATE
         OpenSSL::SSL
         OpenSSL::Crypto
 )
@@ -188,4 +194,16 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/bintradeConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/bintradeConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bintrade
+)
+
+# pkg-config file generation for non-CMake downstream consumers
+# (e.g. Meson, hand-rolled Makefiles, GNU autotools).
+configure_file(
+    "${PROJECT_SOURCE_DIR}/cmake/bintrade.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/bintrade.pc"
+    @ONLY
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/bintrade.pc"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )

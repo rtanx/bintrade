@@ -1,0 +1,65 @@
+# Minimal Doxygen configuration for bintrade public API reference.
+# Driven by `make docs`.  Run from the repository root.
+
+PROJECT_NAME           = "bintrade"
+PROJECT_BRIEF          = "Binance Trading API Wrapper Library"
+PROJECT_NUMBER         =
+
+OUTPUT_DIRECTORY       = build/docs
+CREATE_SUBDIRS         = NO
+ALLOW_UNICODE_NAMES    = NO
+OUTPUT_LANGUAGE        = English
+
+# Inputs.  We deliberately exclude src/ entirely (private implementation)
+# and any include/ subdirectory called detail (internal-only headers).
+INPUT                  = include/bintrade README.md
+FILE_PATTERNS          = *.hpp *.h *.md
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */detail/* *.in
+EXAMPLE_PATH           = examples
+EXAMPLE_RECURSIVE      = YES
+
+# Treat README.md as the landing page.
+USE_MDFILE_AS_MAINPAGE = README.md
+
+# Extraction.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = NO
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+
+# Brief style for /// and //!.
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MULTILINE_CPP_IS_BRIEF = NO
+
+# C++20 friendliness.
+BUILTIN_STL_SUPPORT    = YES
+CPP_CLI_SUPPORT        = NO
+
+# Output formats.
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_MAN           = NO
+
+# Warnings.  Start lenient (header docstrings are sparse today); tighten
+# once coverage is good enough that WARN_AS_ERROR is achievable.
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_AS_ERROR          = NO
+
+# Diagrams (no dot dependency; relies on Doxygen's built-in graphs).
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = YES
+
+# Source browser cross-links.
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES

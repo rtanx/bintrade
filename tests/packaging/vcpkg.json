@@ -1,0 +1,13 @@
+{
+  "name": "bintrade-consumer-smoke",
+  "version-string": "0.0.0",
+  "description": "Downstream smoke test for find_package(bintrade).",
+  "dependencies": [
+    "nlohmann-json",
+    "spdlog",
+    "fmt",
+    "boost-asio",
+    "boost-system",
+    "openssl"
+  ]
+}

@@ -32,3 +32,6 @@ CMakeUserPresets.json
 
 # Test artifacts
 Testing/
+
+.env
+.envrc

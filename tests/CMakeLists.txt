@@ -56,15 +56,22 @@ enable_coverage(bintrade_tests)
 include(GoogleTest)
 gtest_discover_tests(bintrade_tests)
 
-# Integration tests (separate target, not run by default)
-add_executable(bintrade_integration_tests
-    test_main.cpp
-    integration/rest_integration_test.cpp
-)
+# Integration tests are opt-in: they make real network calls to the Binance
+# testnet (https://testnet.binance.vision and wss://testnet.binance.vision/ws)
+# and require an internet connection.  They are excluded from `ctest` by
+# default; enable with -DBINTRADE_ENABLE_INTEGRATION_TESTS=ON and run the
+# resulting binary directly, e.g. `make integration-test`.
+if(BINTRADE_ENABLE_INTEGRATION_TESTS)
+    add_executable(bintrade_integration_tests
+        test_main.cpp
+        integration/rest_integration_test.cpp
+        integration/ws_integration_test.cpp
+    )
 
-target_link_libraries(bintrade_integration_tests
-    PRIVATE
-        bintrade::bintrade
-        GTest::gtest
-        GTest::gmock
-)
+    target_link_libraries(bintrade_integration_tests
+        PRIVATE
+            bintrade::bintrade
+            GTest::gtest
+            GTest::gmock
+    )
+endif()

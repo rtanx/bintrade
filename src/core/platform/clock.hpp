@@ -12,6 +12,23 @@
 
 namespace bintrade::platform {
 
+// Convert a (ticks, ticks-per-second) pair into nanoseconds without
+// overflowing int64 for the realistic uptime range of a CI runner.
+//
+// The naive expression `(ticks * 1e9) / freq` overflows int64 after
+// roughly one hour of uptime at the typical 10 MHz QPC frequency on
+// Windows, which is what bit us in CI.  Splitting the computation into
+// whole seconds plus a sub-second remainder keeps every intermediate
+// product within int64 for uptimes past a century.
+//
+// Precondition: freq > 0.  Negative ticks are accepted but never
+// produced by QPC.
+[[nodiscard]] constexpr std::int64_t ticks_to_ns(std::int64_t ticks, std::int64_t freq) noexcept {
+    const std::int64_t whole_seconds = ticks / freq;
+    const std::int64_t remainder_ticks = ticks % freq;
+    return (whole_seconds * std::int64_t{1'000'000'000}) + ((remainder_ticks * std::int64_t{1'000'000'000}) / freq);
+}
+
 // Returns the current value of a monotonic clock in nanoseconds.
 //
 // The epoch is arbitrary (typically system boot or process start) and must
@@ -27,17 +44,14 @@ namespace bintrade::platform {
 #if defined(_WIN32)
     // Cache the QPC frequency once. Guaranteed to be non-zero on any
     // hardware that supports QPC (all x64 Windows systems since Vista).
-    static const LARGE_INTEGER kFreq = []() noexcept -> LARGE_INTEGER {
+    static const std::int64_t k_freq = []() noexcept -> std::int64_t {
         LARGE_INTEGER f{};
         QueryPerformanceFrequency(&f);
-        return f;
+        return f.QuadPart;
     }();
     LARGE_INTEGER counter{};
     QueryPerformanceCounter(&counter);
-    // Multiply before dividing to preserve sub-nanosecond resolution.
-    // kFreq.QuadPart is ~10^7 on modern hardware; the intermediate product
-    // fits in int64_t for system uptimes up to ~292 years.
-    return (counter.QuadPart * std::int64_t{1'000'000'000}) / kFreq.QuadPart;
+    return ticks_to_ns(counter.QuadPart, k_freq);
 #else
     struct timespec ts{};
     clock_gettime(CLOCK_MONOTONIC, &ts);

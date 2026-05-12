@@ -1,7 +1,8 @@
 {
   "name": "bintrade",
   "version": "0.2.0",
-  "description": "Binance Trading API Wrapper Library",
+  "description": "Binance Trading API Wrapper Library (C++20, low-latency)",
+  "homepage": "https://github.com/rtanx/bintrade",
   "license": "MIT",
   "dependencies": [
     "boost-beast",
@@ -10,8 +11,6 @@
     "nlohmann-json",
     "openssl",
     "spdlog",
-    "fmt",
-    "gtest",
-    "benchmark"
+    "fmt"
   ]
 }
