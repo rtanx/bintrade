@@ -1,0 +1,6 @@
+bintrade provides CMake targets:
+
+    find_package(bintrade CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE bintrade::bintrade)
+
+The single-include umbrella header is <bintrade/bintrade.hpp>.

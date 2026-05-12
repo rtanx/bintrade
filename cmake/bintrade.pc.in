@@ -1,0 +1,14 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: bintrade
+Description: @CMAKE_PROJECT_DESCRIPTION@
+URL: https://github.com/rtanx/bintrade
+Version: @PROJECT_VERSION@
+Requires: nlohmann_json spdlog fmt
+Requires.private: openssl
+Libs: -L${libdir} -lbintrade
+Libs.private: -lboost_system -lssl -lcrypto -lpthread
+Cflags: -I${includedir}
